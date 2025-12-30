@@ -1,0 +1,10 @@
+{
+  "domain": "tedom_modbus",
+  "name": "Tedom CHP Modbus",
+  "codeowners": ["@UJBenda"],
+  "config_flow": true,
+  "documentation": "https://github.com/UJBenda/tedom_modbus",
+  "iot_class": "local_polling",
+  "requirements": ["pymodbus>=3.0.0"],
+  "version": "1.0.0"
+}
