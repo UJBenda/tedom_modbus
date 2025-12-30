@@ -8,20 +8,22 @@ PLATFORMS = ["sensor"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
 
-    # Inicializace Hubu s parametry z config flow
-    hub = TedomHub(
-        hass,
-        name=entry.data["name"],
-        host=entry.data["host"],
-        port=entry.data["port"],
-        scan_interval=entry.data.get(CONF_SCAN_INTERVAL, 15),
-        plugin_name=entry.data.get(CONF_PLUGIN)
-    )
+    name = entry.data["name"]
+    host = entry.data["host"]
+    port = entry.data["port"]
+    scan_interval = entry.data.get(CONF_SCAN_INTERVAL, 15)
+    plugin_name = entry.data.get(CONF_PLUGIN)
 
+    # 1. Vytvoření instance Hubu
+    hub = TedomHub(hass, name, host, port, scan_interval, plugin_name)
+
+    # 2. Bezpečné načtení pluginu (čekáme, až se načte v executoru)
+    await hub.async_init()
+
+    # 3. Uložení a registrace
     hass.data[DOMAIN][entry.entry_id] = hub
-    
-    # Forward na sensor.py
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

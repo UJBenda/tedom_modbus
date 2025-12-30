@@ -13,21 +13,39 @@ class TedomHub:
         self._name = name
         self._client = ModbusTcpClient(host=host, port=port)
         self._scan_interval = scan_interval
+        self._plugin_name = plugin_name
+        self.plugin_map = {}
         self.data = {}
+
+    async def async_init(self):
+        """Asynchronní inicializace - bezpečné načtení pluginu."""
+        def load_plugin():
+            try:
+                # Absolutní import je bezpečnější
+                full_module_name = f"custom_components.tedom_modbus.{self._plugin_name}"
+                module = importlib.import_module(full_module_name)
+                return module.PLUGIN_MAP
+            except ImportError as e:
+                _LOGGER.error(f"Tedom: Nelze načíst plugin '{self._plugin_name}'. Chyba: {e}")
+                return {}
+            except Exception as e:
+                _LOGGER.error(f"Tedom: Chyba v pluginu '{self._plugin_name}': {e}")
+                return {}
+
+        # Spustíme import v "executoru", aby neblokoval smyčku HA
+        self.plugin_map = await self._hass.async_add_executor_job(load_plugin)
         
-        # Dynamický import pluginu podle jména
-        # Hledá soubor ve stejné složce: custom_components.tedom_modbus.plugin_XY
-        try:
-            module = importlib.import_module(f".plugin_{plugin_name}", package="custom_components.tedom_modbus")
-            self.plugin_map = module.PLUGIN_MAP
-            _LOGGER.info(f"Načten plugin: {plugin_name}")
-        except ImportError as e:
-            _LOGGER.error(f"Nelze načíst plugin {plugin_name}: {e}")
-            self.plugin_map = {}
+        if self.plugin_map:
+            _LOGGER.info(f"Tedom: Úspěšně načten plugin {self._plugin_name} s {len(self.plugin_map)} registry.")
 
     def update(self):
         """Hlavní smyčka čtení dat."""
+        if not self.plugin_map:
+            return
+
+        # Připojení (blokující operace, ale v update_coordinatoru běží v threadu, takže OK)
         if not self._client.connect():
+            _LOGGER.warning(f"Tedom: Nelze se připojit k {self._client.comm_params.host}")
             return
 
         for key, info in self.plugin_map.items():

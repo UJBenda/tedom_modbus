@@ -8,6 +8,6 @@ CONF_PLUGIN = "plugin"
 
 # Zde mapujeme: "Název v menu" -> "Název souboru bez .py"
 AVAILABLE_PLUGINS = {
-    "tedom_intelicompact": "Tedom InteliCompact (User Table 117)",
+    "plugin_tedom_intelicompact": "Tedom InteliCompact (User Table 117)",
     # "tedom_iny_typ": "Tedom Jiný Typ (User Table XY)",
 }
