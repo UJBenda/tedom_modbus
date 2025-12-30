@@ -1,10 +1,13 @@
 {
   "domain": "tedom_modbus",
-  "name": "Tedom CHP Modbus",
+  "name": "Tedom Cogeneration Modbus",
+  "after_dependencies": ["modbus"],
   "codeowners": ["@UJBenda"],
   "config_flow": true,
+  "dependencies": [],
   "documentation": "https://github.com/UJBenda/tedom_modbus",
+  "integration_type": "hub"
   "iot_class": "local_polling",
-  "requirements": ["pymodbus>=3.0.0"],
-  "version": "1.0.7"
+  "requirements": ["pymodbus>=3.8.3"],
+  "version": "2025.12.30"
 }
