@@ -1,6 +1,6 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from .const import DOMAIN, CONF_PLUGIN, CONF_SCAN_INTERVAL
+from .const import DOMAIN, CONF_PLUGIN, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
 from .hub import TedomHub
 
 PLATFORMS = ["sensor"]
@@ -11,7 +11,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     name = entry.data["name"]
     host = entry.data["host"]
     port = entry.data["port"]
-    scan_interval = entry.data.get(CONF_SCAN_INTERVAL, 15)
+    scan_interval = entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     plugin_name = entry.data.get(CONF_PLUGIN)
 
     # 1. Vytvoření instance Hubu
@@ -29,5 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hub = hass.data[DOMAIN].pop(entry.entry_id)
+        await hass.async_add_executor_job(hub.close)
     return unload_ok
