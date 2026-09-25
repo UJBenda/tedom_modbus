@@ -8,7 +8,8 @@
           "host": "Adresa (IP)",
           "port": "Modbus TCP port",
           "plugin": "Typ řídicí jednotky",
-          "scan_interval": "Interval čtení (s)"
+          "scan_interval": "Interval čtení (s)",
+          "unit_id": "Modbus ID (adresa řídicí jednotky)"
         }
       }
     },

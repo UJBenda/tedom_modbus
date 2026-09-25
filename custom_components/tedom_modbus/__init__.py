@@ -4,7 +4,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from .const import DOMAIN, CONF_PLUGIN, CONF_SCAN_INTERVAL, DEFAULT_PLUGIN, DEFAULT_SCAN_INTERVAL, AVAILABLE_PLUGINS
+from .const import DOMAIN, CONF_PLUGIN, CONF_SCAN_INTERVAL, DEFAULT_PLUGIN, DEFAULT_SCAN_INTERVAL, AVAILABLE_PLUGINS, CONF_UNIT_ID, DEFAULT_UNIT_ID
 from .hub import TedomHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         plugin_name = DEFAULT_PLUGIN
 
     # 1. Vytvoření instance Hubu
-    hub = TedomHub(hass, name, host, port, scan_interval, plugin_name)
+    unit_id = entry.data.get(CONF_UNIT_ID, DEFAULT_UNIT_ID)
+    hub = TedomHub(hass, name, host, port, scan_interval, plugin_name, unit_id)
 
     # 2. Bezpečné načtení pluginu (čekáme, až se načte v executoru)
     await hub.async_init()

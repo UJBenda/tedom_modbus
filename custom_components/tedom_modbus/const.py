@@ -7,6 +7,8 @@ DEFAULT_PORT = 502
 DEFAULT_PLUGIN = "plugin_tedom_intelicompact"
 CONF_PLUGIN = "plugin"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_UNIT_ID = "unit_id"
+DEFAULT_UNIT_ID = 1
 
 # Zde mapujeme: "Název souboru bez .py" -> "Název v menu"
 AVAILABLE_PLUGINS = {

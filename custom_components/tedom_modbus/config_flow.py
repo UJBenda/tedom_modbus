@@ -9,6 +9,8 @@ from .const import (
     DEFAULT_PLUGIN,
     CONF_PLUGIN,
     CONF_SCAN_INTERVAL,
+    CONF_UNIT_ID,
+    DEFAULT_UNIT_ID,
     AVAILABLE_PLUGINS,
 )
 
@@ -29,6 +31,7 @@ class TedomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(int, vol.Range(min=1, max=65535)),
                 vol.Required(CONF_PLUGIN, default=DEFAULT_PLUGIN): vol.In(AVAILABLE_PLUGINS),
+                vol.Optional(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(int, vol.Range(min=1, max=247)),
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(int, vol.Range(min=5)),
             })
         )

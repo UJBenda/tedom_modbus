@@ -8,7 +8,8 @@
           "host": "Host (IP address)",
           "port": "Modbus TCP port",
           "plugin": "Controller type",
-          "scan_interval": "Scan interval (s)"
+          "scan_interval": "Scan interval (s)",
+          "unit_id": "Modbus ID (address of the controller)"
         }
       }
     },
