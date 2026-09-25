@@ -1,63 +1,49 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
-from homeassistant.components.sensor import SensorEntity
-from datetime import timedelta
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 import logging
 
 from .const import DOMAIN
+from .entity import TedomEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     hub = hass.data[DOMAIN][entry.entry_id]
-    
-    # Koordinátor pro pravidelné čtení
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="Tedom Sensor",
-        update_method=lambda: hass.async_add_executor_job(hub.update),
-        update_interval=timedelta(seconds=hub._scan_interval),
+
+    # Iterujeme přes mapu načteného pluginu
+    async_add_entities(
+        TedomSensor(hub, entry.entry_id, key, info) for key, info in hub.plugin_map.items()
     )
 
-    await coordinator.async_config_entry_first_refresh()
 
-    entities = []
-    # Iterujeme přes mapu načteného pluginu
-    for key, info in hub.plugin_map.items():
-        entities.append(TedomSensor(coordinator, hub, key, info))
-
-    async_add_entities(entities)
-
-
-class TedomSensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coordinator, hub, key, info):
-        super().__init__(coordinator)
-        self._hub = hub
-        self._key = key
-        self._info = info
-        self._attr_name = f"{hub._name} {info['name']}"
-        self._attr_unique_id = f"{hub._name}_{key}".lower().replace(" ", "_")
+class TedomSensor(TedomEntity, SensorEntity):
+    def __init__(self, hub, entry_id, key, info):
+        super().__init__(hub, entry_id, key, info)
         self._attr_native_unit_of_measurement = info.get("unit")
         self._attr_device_class = info.get("device_class")
         self._attr_state_class = info.get("state_class")
-        self._attr_icon = info.get("icon")
+        if self._attr_device_class == SensorDeviceClass.ENUM:
+            # ENUM senzor musí znát všechny možné stavy předem
+            self._attr_options = list(dict.fromkeys(info.get("value_map", {}).values()))
 
     @property
     def native_value(self):
         """Vrátí hodnotu z Hubu."""
         raw_val = self._hub.data.get(self._key)
-        
+
         if raw_val is None:
             return None
 
         # Pokud má senzor mapu hodnot (pro stavy), převedeme číslo na text
         value_map = self._info.get("value_map")
         if value_map:
-            return value_map.get(int(raw_val), raw_val)
-        
+            state = value_map.get(int(raw_val))
+            if state is None:
+                _LOGGER.debug(f"Tedom: Neznámý stav {raw_val} pro {self._key}")
+            return state
+
         # Oříznutí desetinných míst
         precision = self._info.get("precision", 0)
         if precision == 0:

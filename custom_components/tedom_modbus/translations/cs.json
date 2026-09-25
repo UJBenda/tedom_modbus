@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kogenerační jednotka Tedom",
+        "data": {
+          "name": "Název",
+          "host": "Adresa (IP)",
+          "port": "Modbus TCP port",
+          "plugin": "Typ řídicí jednotky",
+          "scan_interval": "Interval čtení (s)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Tato jednotka už je nastavená."
+    }
+  }
+}
