@@ -30,4 +30,7 @@ class TedomSelect(TedomEntity, SelectEntity):
         await self.hass.async_add_executor_job(
             self._hub.write_value, self._info, self._reverse_map[option]
         )
+        # Zapsaná hodnota hned v UI, potvrzení přijde s dalším čtením
+        self._hub.data[self._key] = self._reverse_map[option]
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
