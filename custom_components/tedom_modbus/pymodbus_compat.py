@@ -1,13 +1,17 @@
 import logging
 import struct
 from enum import Enum
-import pymodbus
+import inspect
+from pymodbus.client import AsyncModbusTcpClient
 
 _LOGGER = logging.getLogger(__name__)
 
-# Detekce verze pro správný parametr slave/device_id
-_PM_VER = pymodbus.__version__
-ADDR_KW = "device_id" if _PM_VER >= "3.10.0" else "slave"
+# Detekce správného parametru slave/device_id (pymodbus 3.10+ používá device_id)
+ADDR_KW = (
+    "device_id"
+    if "device_id" in inspect.signature(AsyncModbusTcpClient.read_holding_registers).parameters
+    else "slave"
+)
 
 class DataType(Enum):
     INT16 = "int16"

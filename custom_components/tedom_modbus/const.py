@@ -47,6 +47,9 @@ class TedomButtonEntityDescription(ButtonEntityDescription):
     """Popis tlačítka pro zápis příkazu (např. Reset)."""
     address: int = 0
     payload: int = 1
+    # ComAp příkaz (např. 0x01FE0000 = start) a hodnota, kterou controller vrátí po provedení
+    command: int = None
+    command_return: int = None
 
 @dataclass
 class TedomSelectEntityDescription(SelectEntityDescription):

@@ -7,14 +7,26 @@
           "name": "Name",
           "host": "Host (IP address)",
           "port": "Modbus TCP port",
-          "plugin": "Controller type",
-          "scan_interval": "Scan interval (s)",
-          "unit_id": "Modbus ID (address of the controller)"
+          "modbus_address": "Modbus address (controller ID)",
+          "scan_interval": "Scan interval (s)"
         }
       }
     },
     "abort": {
       "already_configured": "This unit is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tedom cogeneration unit",
+        "data": {
+          "host": "Host (IP address)",
+          "port": "Modbus TCP port",
+          "modbus_address": "Modbus address (controller ID)",
+          "scan_interval": "Scan interval (s)"
+        }
+      }
     }
   }
 }

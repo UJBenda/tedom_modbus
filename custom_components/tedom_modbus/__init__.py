@@ -14,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 from pymodbus.client import AsyncModbusTcpClient
 from .pymodbus_compat import DataType, convert_from_registers, ADDR_KW
@@ -169,6 +169,37 @@ class TedomHub:
             for entity in self.entities:
                 if hasattr(entity, "async_write_ha_state"):
                     entity.async_write_ha_state()
+
+    async def async_send_command(self, command, expected_return):
+        """ComAp příkaz: argument do 46359-46360 a 1 do 46361 jedním zápisem (FC16)."""
+        address = 46359 - 40001
+        async with self._lock:
+            if not await self.async_connect():
+                raise HomeAssistantError(f"Tedom ({self._name}): ComAp je nedostupný")
+            try:
+                result = await self._client.write_registers(
+                    address=address,
+                    values=[command >> 16, command & 0xFFFF, 1],
+                    **{ADDR_KW: self._modbus_addr},
+                )
+                if result.isError():
+                    raise HomeAssistantError(f"Tedom ({self._name}): Controller odmítl příkaz: {result}")
+                await asyncio.sleep(0.5)
+                # Po provedení controller přepíše argument návratovou hodnotou
+                result = await self._client.read_holding_registers(
+                    address=address, count=2, **{ADDR_KW: self._modbus_addr}
+                )
+                returned = None if result.isError() else (result.registers[0] << 16) | result.registers[1]
+            finally:
+                self._client.close()
+
+        if returned != expected_return:
+            raise HomeAssistantError(
+                f"Tedom ({self._name}): Controller příkaz neprovedl (vráceno "
+                f"{'?' if returned is None else f'0x{returned:08X}'}, očekáváno 0x{expected_return:08X}). "
+                "Zkontrolujte, že je stroj v režimu SEM."
+            )
+        self._hass.async_create_task(self.async_refresh_modbus_data())
 
     async def async_write_register(self, address, value):
         """Zápis s okamžitým uvolněním slotu."""

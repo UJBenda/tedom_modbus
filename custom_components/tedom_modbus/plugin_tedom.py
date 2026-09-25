@@ -69,7 +69,10 @@ class TedomPlugin:
     ]
 
     BUTTON_TYPES = [
-        TedomButtonEntityDescription(key="cmd_fault_reset", name="Reset poruch", address=409, payload=1, icon="mdi:alert-remove") # Funkční
+        TedomButtonEntityDescription(key="cmd_fault_reset", name="Reset poruch", address=409, payload=1, icon="mdi:alert-remove"), # Funkční
+        # ComAp příkazy přes registry 46359-46361 (funguje v režimu SEM, v AUT je controller ignoruje)
+        TedomButtonEntityDescription(key="cmd_engine_start", name="Start motoru", command=0x01FE0000, command_return=0x000001FF, icon="mdi:play"),
+        TedomButtonEntityDescription(key="cmd_engine_stop", name="Stop motoru", command=0x02FD0000, command_return=0x000002FE, icon="mdi:stop"),
     ]
 
     NUMBER_TYPES = [
