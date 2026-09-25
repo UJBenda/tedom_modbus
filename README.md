@@ -1,41 +1,31 @@
 # Tedom Cogeneration Modbus
 
-Integrace pro Home Assistant, která čte data z kogeneračních jednotek TEDOM
+Integrace pro Home Assistant, která čte a ovládá kogenerační jednotky TEDOM
 (řídicí jednotka ComAp InteliCompact) přes Modbus TCP.
 
 ## Instalace (HACS)
 
 1. HACS → Integrace → ⋮ → Vlastní repozitáře → přidat `https://github.com/UJBenda/tedom_modbus` (kategorie *Integration*).
-2. Nainstalovat **Tedom Cogeneration Modbus** a restartovat Home Assistant.
-3. Nastavení → Zařízení a služby → Přidat integraci → **Tedom Cogeneration Modbus**.
+2. Nainstalovat **Tedom Cogeneration** a restartovat Home Assistant.
+3. Nastavení → Zařízení a služby → Přidat integraci → **Tedom Cogeneration**
+   (IP, port, Modbus adresa řídicí jednotky, interval čtení).
 
-## Senzory (plugin InteliCompact)
+## Co integrace umí
 
-Mapa registrů vychází z exportu GenConfigu `584-generator.TXT`, ~43 senzorů:
+- **Senzory** – výkon, otáčky, frekvence, napětí a proudy generátoru, teplota vody,
+  napětí baterie, motohodiny, počet startů, vyrobená energie, stav motoru a jističe,
+  binární vstupy (Ext. Start/Stop, nouzové zastavení, tlak a hladina oleje)
+- **Režim stroje** – VYP / SEM / AUT
+- **Požadovaný výkon** a **požadovaná teplota**
+- **Tlačítka** – Reset poruch, Start motoru, Stop motoru
 
-- **Generátor** – fázová a sdružená napětí, proudy L1–L3, frekvence, činný (celkem i po fázích), jalový a zdánlivý výkon, účiník, žádaný výkon
-- **Síť** – napětí L1–L3, frekvence, výkon ze sítě, výkon zátěže
-- **Motor** – otáčky, teplota vody / sekundární vody, teploty SEKCE 1/2, lambda
-- **Stavy** – stav motoru, stav stykače (text dle Table#1), časovač
-- **Statistika** – motohodiny, čas do servisu, počet startů, činná a jalová energie, počty stopů
+Start/Stop se posílá jako ComAp příkaz (argument do 46359–46360, `1` do 46361).
+Controller ho provede jen v režimu **SEM**; v AUT jednotka poslouchá vstup
+Ext. Start/Stop. Pokud příkaz neprovede, Home Assistant zobrazí chybu.
 
-## Ovládání
+## Poznámky k ComAp
 
-- **Tlačítka** – Start motoru, Stop motoru, Reset poruch, Reset houkačky
-  (ComAp příkaz: argument do 46359–46360 a `1` do 46361 jedním zápisem;
-  po provedení controller vrátí potvrzení, jinak HA zobrazí chybu)
-- **Výběr** – Režim řídicího systému (VYP / MAN / SEM / AUT, registr 43204)
-- **Číslo** – Konstantní výkon (43020), limity podle Min. výkonu paralelně a Jmenovitého výkonu
-
-⚠️ Start/Stop funguje jen v režimu **MAN**. V AUT jednotka poslouchá vstup
-`Ext.Start/Stop` a příkaz z Modbusu ignoruje. Pokud jsou v GenConfigu
-příkazy nebo setpointy chráněné heslem, controller zápis odmítne.
-
-Registry jsou v pluginu zapsané stejně jako v tabulce (např. `40021`). Adresa
-v Modbus rámci je `registr − 40001` (`REGISTER_BASE` v pluginu). Pokud by
-hodnoty vypadaly posunuté o jeden registr, stačí `REGISTER_BASE` změnit na `40000`.
-Pokud by 32bitové hodnoty (motohodiny, energie) byly nesmyslně velké, změňte
-`WORD_ORDER` na `"little"`.
-
-Další typy jednotek lze přidat jako nový soubor `plugin_*.py` s `PLUGIN_MAP`
-a jeho zápisem do `AVAILABLE_PLUGINS` v `const.py`.
+- Adresa v Modbus rámci = číslo registru − 40001 (např. otáčky 40021 → 20).
+- Po každém cyklu čtení se TCP spojení uzavře – komunikační moduly ComAp mají
+  jen málo TCP slotů.
+- Registry jsou v `plugin_tedom.py`.

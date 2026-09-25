@@ -1,11 +1,11 @@
 {
   "domain": "tedom_modbus",
-  "name": "Tedom Cogeneration Modbus",
+  "name": "Tedom Cogeneration",
   "codeowners": ["@UJBenda"],
   "config_flow": true,
   "documentation": "https://github.com/UJBenda/tedom_modbus",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "requirements": ["pymodbus>=3.8.3"],
-  "version": "1.1.1"
+  "version": "1.2.0"
 }

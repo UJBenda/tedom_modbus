@@ -7,13 +7,26 @@
           "name": "Název",
           "host": "Adresa (IP)",
           "port": "Modbus TCP port",
-          "plugin": "Typ řídicí jednotky",
+          "modbus_address": "Modbus adresa (ID řídicí jednotky)",
           "scan_interval": "Interval čtení (s)"
         }
       }
     },
     "abort": {
       "already_configured": "Tato jednotka už je nastavená."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Kogenerační jednotka Tedom",
+        "data": {
+          "host": "Adresa (IP)",
+          "port": "Modbus TCP port",
+          "modbus_address": "Modbus adresa (ID řídicí jednotky)",
+          "scan_interval": "Interval čtení (s)"
+        }
+      }
     }
   }
 }
