@@ -32,6 +32,11 @@ class TedomNumber(NumberEntity):
         )
 
     @property
+    def available(self) -> bool:
+        """Bez načtené aktuální hodnoty je nastavení nedostupné – nejde měnit naslepo."""
+        return self.entity_description.key in self._hub.data
+
+    @property
     def native_value(self):
         return self._hub.data.get(self.entity_description.key)
 
