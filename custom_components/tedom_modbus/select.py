@@ -51,6 +51,11 @@ class TedomSelect(SelectEntity):
         )
 
     @property
+    def available(self) -> bool:
+        """Bez načtené aktuální hodnoty je nastavení nedostupné – nejde měnit naslepo."""
+        return self.entity_description.key in self._hub.data
+
+    @property
     def current_option(self):
         """Vrátí aktuálně vybraný textový režim na základě čísla v Modbusu."""
         # Získáme aktuální hodnotu z mezipaměti Hubu

@@ -93,6 +93,7 @@ class TedomHub:
         self._lock = asyncio.Lock()
         
         self._last_run_2 = 0
+        self._read_errors = set()  # klíče, u kterých už bylo zalogováno selhání čtení
         self._last_run_3 = 0
 
     async def async_connect(self):
@@ -146,11 +147,14 @@ class TedomHub:
                                     self.data[desc.key] = int(val)
                                 else:
                                     self.data[desc.key] = val * desc.scale
-                        
+                                self._read_errors.discard(desc.key)
+                        else:
+                            self._log_read_error(desc, result)
+
                         await asyncio.sleep(0.08) # Pauza pro stabilitu
 
                     except Exception as e:
-                        _LOGGER.debug(f"Chyba čtení {desc.key}: {e}")
+                        self._log_read_error(desc, e)
 
                 if run_2: self._last_run_2 = now
                 if run_3: self._last_run_3 = now
@@ -169,6 +173,16 @@ class TedomHub:
             for entity in self.entities:
                 if hasattr(entity, "async_write_ha_state"):
                     entity.async_write_ha_state()
+
+    def _log_read_error(self, desc, error):
+        """Selhání čtení zaloguje jednou (ne každý cyklus), aby bylo vidět, který registr nejde."""
+        self.data.pop(desc.key, None)
+        if desc.key not in self._read_errors:
+            self._read_errors.add(desc.key)
+            _LOGGER.warning(
+                f"Tedom ({self._name}): Nelze přečíst '{desc.name}' "
+                f"(registr {desc.address + 40001}, adresa {desc.address}): {error}"
+            )
 
     async def async_send_command(self, command, expected_return):
         """ComAp příkaz: argument do 46359-46360 a 1 do 46361 jedním zápisem (FC16)."""
