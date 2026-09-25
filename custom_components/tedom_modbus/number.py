@@ -45,4 +45,7 @@ class TedomNumber(TedomEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         await self.hass.async_add_executor_job(self._hub.write_value, self._info, value)
+        # Zapsaná hodnota hned v UI, potvrzení přijde s dalším čtením
+        self._hub.data[self._key] = value
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
