@@ -22,6 +22,11 @@ from homeassistant.const import (
 
 REGISTER_BASE = 40001
 
+# Pořadí 16bitových slov u 32bitových hodnot (motohodiny, energie).
+# ComAp posílá vyšší slovo první ("big"). Kdyby motohodiny ukazovaly nesmysl
+# (miliardy), zkuste "little" – lze nastavit i u jednotlivého registru klíčem "word_order".
+WORD_ORDER = "big"
+
 MEAS = SensorStateClass.MEASUREMENT
 TOTAL = SensorStateClass.TOTAL_INCREASING
 
@@ -114,6 +119,10 @@ PLUGIN_MAP = {
 
     # --- Řídicí systém ---
     "battery_voltage": _s(40061, "Napětí baterie", V, 0.1, 1, VOLT, icon="mdi:car-battery"),
+    "nominal_power": _s(43038, "Jmenovitý výkon", KW, 0.1, 1, POW, state_class=None,
+                        register_type="uint16", icon="mdi:information-outline"),
+    "min_power_parallel": _s(43134, "Min. výkon paralelně", KW, 0.1, 1, POW, state_class=None,
+                             register_type="uint16", icon="mdi:information-outline"),
     "controller_temp": _s(40235, "Teplota procesoru", C, 0.1, 1, TEMP, icon="mdi:chip"),
 
     # --- Stavy ---
@@ -136,4 +145,41 @@ PLUGIN_MAP = {
     "normal_stops": _s(43011, "Počet běžných stopů", state_class=TOTAL, icon="mdi:counter", register_type="uint32"),
     "emergency_stops": _s(43013, "Počet havarijních stopů", state_class=TOTAL, icon="mdi:alert-octagon",
                           register_type="uint32"),
+}
+
+
+# --- Zápis ---
+
+# List#7 – režim řídicího systému
+MODE_TABLE = {0: "VYP", 1: "MAN", 2: "SEM", 3: "AUT"}
+
+SELECT_MAP = {
+    "controller_mode": {
+        "register": 43204, "name": "Režim řídicího systému", "register_type": "uint16",
+        "value_map": MODE_TABLE, "icon": "mdi:state-machine",
+    },
+}
+
+NUMBER_MAP = {
+    # Limity jsou v ComApu dané jinými setpointy (MinVýkParalel, JmenVýkon)
+    "power_constant": {
+        "register": 43020, "name": "Konstantní výkon", "register_type": "int16",
+        "unit": KW, "device_class": POW, "scale": 0.1, "precision": 1,
+        "min": "min_power_parallel", "min_fallback": 0,
+        "max": "nominal_power", "max_fallback": 3200,
+        "icon": "mdi:tune-vertical",
+    },
+}
+
+# ComAp příkazy: argument -> 46359-46360, kód příkazu 1 -> 46361.
+# Po provedení controller vrátí v 46359-46360 "expected_return".
+BUTTON_MAP = {
+    "engine_start": {"name": "Start motoru", "argument": 0x01FE0000,
+                     "expected_return": 0x000001FF, "icon": "mdi:play"},
+    "engine_stop": {"name": "Stop motoru", "argument": 0x02FD0000,
+                    "expected_return": 0x000002FE, "icon": "mdi:stop"},
+    "horn_reset": {"name": "Reset houkačky", "argument": 0x04FB0000,
+                   "expected_return": 0x000004FC, "icon": "mdi:bell-off"},
+    "fault_reset": {"name": "Reset poruch", "argument": 0x08F70000,
+                    "expected_return": 0x000008F8, "icon": "mdi:alert-remove"},
 }
