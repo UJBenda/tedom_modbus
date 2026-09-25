@@ -12,12 +12,17 @@ Integrace pro Home Assistant, která čte a ovládá kogenerační jednotky TEDO
 
 ## Co integrace umí
 
-- **Senzory** – výkon, otáčky, frekvence, napětí a proudy generátoru, teplota vody,
-  napětí baterie, motohodiny, počet startů, vyrobená energie, stav motoru a jističe,
-  binární vstupy (Ext. Start/Stop, nouzové zastavení, tlak a hladina oleje)
-- **Režim stroje** – VYP / SEM / AUT
-- **Požadovaný výkon** a **požadovaná teplota**
+- **Generátor** – výkon (celkem i po fázích), jalový a zdánlivý výkon, účiník,
+  napětí (fázová i sdružená), proudy, frekvence
+- **Síť a spotřeba** – výkon ze sítě, výkon zátěže, napětí a frekvence sítě
+- **Motor a teplo** – otáčky, teploty vody, SEKCE 1/2, lambda, baterie
+- **Údržba** – motohodiny, čas do servisu, počet startů a stopů, vyrobená energie
+- **Stavy a signály** – stav motoru a jističe, časovač, výstraha, centrální stop,
+  tlak a hladina oleje, stykače, ventil paliva, čerpadla, lampy ECU, poruchy ECU
+- **Nastavení** – režim stroje (VYP / SEM / AUT), požadovaný výkon, požadovaná teplota
 - **Tlačítka** – Reset poruch, Start motoru, Stop motoru
+
+Méně důležité entity jsou ve výchozím stavu vypnuté – zapnout je lze v nastavení entity.
 
 Start/Stop se posílá jako ComAp příkaz (argument do 46359–46360, `1` do 46361).
 Controller ho provede jen v režimu **SEM**; v AUT jednotka poslouchá vstup

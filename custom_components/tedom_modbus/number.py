@@ -41,6 +41,6 @@ class TedomNumber(NumberEntity):
         return self._hub.data.get(self.entity_description.key)
 
     async def async_set_native_value(self, value: float) -> None:
-        write_val = int(value / self.entity_description.scale)
+        write_val = round(value / self.entity_description.scale)
         await self._hub.async_write_register(self.entity_description.address, write_val)
         self._hub.data[self.entity_description.key] = value
