@@ -2,35 +2,74 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
+from homeassistant.helpers.entity import DeviceInfo
 from .const import DOMAIN
-from .entity import TedomEntity
+from .plugin_tedom import TedomPlugin
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
-    hub = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        TedomSelect(hub, entry.entry_id, key, info) for key, info in hub.select_map.items()
-    )
+    """Registrace přepínačů (Select) pro danou instanci Tedomu."""
+    hub = hass.data[DOMAIN][entry.entry_id]["hub"]
+    
+    # Ověříme, zda plugin definuje nějaké přepínače
+    if hasattr(hub.plugin, "SELECT_TYPES"):
+        entities = [TedomSelect(hub, desc) for desc in hub.plugin.SELECT_TYPES]
+        async_add_entities(entities)
+        
+        # Přidáme entity do seznamu v Hubu pro aktualizaci stavu
+        hub.entities.extend(entities)
 
+class TedomSelect(SelectEntity):
+    """Reprezentace přepínače režimu (Read/Write) přes Modbus."""
 
-class TedomSelect(TedomEntity, SelectEntity):
-    def __init__(self, hub, entry_id, key, info):
-        super().__init__(hub, entry_id, key, info)
-        self._attr_options = list(info["value_map"].values())
-        self._reverse_map = {v: k for k, v in info["value_map"].items()}
+    _attr_has_entity_name = True # Moderní seskupování pod zařízení
+
+    def __init__(self, hub, description):
+        """Inicializace přepínače."""
+        self._hub = hub
+        self.entity_description = description
+        
+        # Unikátní ID pro HA
+        self._attr_unique_id = f"{hub._name}_{description.key}".lower()
+        
+        # Název entity (HA k němu přidá název zařízení sám)
+        self._attr_name = description.name
+        
+        # Načtení dostupných textových voleb z mapy (např. VYP, SEM, AUT)
+        self._attr_options = list(description.options_map.keys())
+        
+        # Vypneme polling, Hub data posílá hromadně
+        self._attr_should_poll = False 
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Informace o zařízení pro UI."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._hub._name)},
+            name=self._hub._name,
+            manufacturer="Tedom",
+            model=TedomPlugin.NAME,
+        )
 
     @property
     def current_option(self):
-        raw_val = self._hub.data.get(self._key)
-        if raw_val is None:
-            return None
-        return self._info["value_map"].get(int(raw_val))
+        """Vrátí aktuálně vybraný textový režim na základě čísla v Modbusu."""
+        # Získáme aktuální hodnotu z mezipaměti Hubu
+        val = self._hub.data.get(self.entity_description.key)
+        
+        if val is not None:
+            # Najdeme odpovídající text v options_map
+            for name, v in self.entity_description.options_map.items():
+                if int(v) == int(val):
+                    return name
+        return None
 
     async def async_select_option(self, option: str) -> None:
-        await self.hass.async_add_executor_job(
-            self._hub.write_value, self._info, self._reverse_map[option]
+        """Změna režimu stroje uživatelem z UI."""
+        # Najdeme číselnou hodnotu pro vybraný text
+        val_to_write = self.entity_description.options_map[option]
+        
+        # Zapíšeme do registru a automaticky uvolníme slot (díky úpravě v Hubu)
+        await self._hub.async_write_register(
+            address=self.entity_description.address, 
+            value=val_to_write
         )
-        # Zapsaná hodnota hned v UI, potvrzení přijde s dalším čtením
-        self._hub.data[self._key] = self._reverse_map[option]
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
