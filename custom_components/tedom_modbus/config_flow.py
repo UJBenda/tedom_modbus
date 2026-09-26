@@ -5,7 +5,8 @@ from homeassistant.core import callback
 from .const import (
     DOMAIN, DEFAULT_PORT, DEFAULT_NAME, CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR,
     DEFAULT_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_2, DEFAULT_SCAN_INTERVAL_3,
-    CONF_SCAN_INTERVAL_2, CONF_SCAN_INTERVAL_3
+    CONF_SCAN_INTERVAL_2, CONF_SCAN_INTERVAL_3,
+    CONF_GEN_TYPE, GEN_TYPES, GEN_TYPE_ASYNC,
 )
 
 class TedomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -18,6 +19,7 @@ class TedomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
             vol.Required(CONF_MODBUS_ADDR, default=DEFAULT_MODBUS_ADDR): int,
+            vol.Required(CONF_GEN_TYPE, default=GEN_TYPE_ASYNC): vol.In(GEN_TYPES),
             vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
         }))
 
@@ -37,5 +39,6 @@ class TedomOptionsFlowHandler(config_entries.OptionsFlow):
             vol.Required(CONF_HOST, default=opts.get(CONF_HOST, conf.get(CONF_HOST, ""))): str,
             vol.Required(CONF_PORT, default=opts.get(CONF_PORT, conf.get(CONF_PORT, DEFAULT_PORT))): int,
             vol.Required(CONF_MODBUS_ADDR, default=opts.get(CONF_MODBUS_ADDR, conf.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))): int,
+            vol.Required(CONF_GEN_TYPE, default=opts.get(CONF_GEN_TYPE, conf.get(CONF_GEN_TYPE, GEN_TYPE_ASYNC))): vol.In(GEN_TYPES),
             vol.Optional(CONF_SCAN_INTERVAL, default=opts.get(CONF_SCAN_INTERVAL, conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))): int,
         }))

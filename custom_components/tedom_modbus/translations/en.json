@@ -8,7 +8,8 @@
           "host": "Host (IP address)",
           "port": "Modbus TCP port",
           "modbus_address": "Modbus address (controller ID)",
-          "scan_interval": "Scan interval (s)"
+          "scan_interval": "Scan interval (s)",
+          "generator_type": "Generator type"
         }
       }
     },
@@ -24,7 +25,8 @@
           "host": "Host (IP address)",
           "port": "Modbus TCP port",
           "modbus_address": "Modbus address (controller ID)",
-          "scan_interval": "Scan interval (s)"
+          "scan_interval": "Scan interval (s)",
+          "generator_type": "Generator type"
         }
       }
     }

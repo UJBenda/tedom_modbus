@@ -3,7 +3,10 @@ from homeassistant.const import (
     PERCENTAGE, UnitOfPower, UnitOfElectricPotential, UnitOfElectricCurrent,
     UnitOfTemperature, UnitOfFrequency, UnitOfTime, UnitOfEnergy,
 )
+import dataclasses
+
 from .const import (
+    GEN_TYPE_SYNC,
     TedomSensorEntityDescription, TedomButtonEntityDescription, 
     TedomSelectEntityDescription, TedomNumberEntityDescription,
     REGISTER_U16, REGISTER_S16, REGISTER_U32, REGISTER_S32
@@ -21,8 +24,42 @@ FULL_STATE_MAP = {
     55: "Bez časovače", 71: "Syst. Start", 72: "Syst. Stop", 73: "Zahřívání"
 }
 
+# Synchronní generátor (export 584-generator.TXT): Table#1 – stav motoru / stykače
+SYNC_STATE_MAP = {
+    25: "Inicializ", 26: "Připraven", 27: "Nepřiprav", 28: "Předstart", 29: "Spouštění",
+    30: "Pauza", 31: "Startuje", 32: "Běží", 33: "Zatížen", 34: "Odlehčuje",
+    35: "Chlazení", 36: "PomStop", 37: "HavStop", 38: "Ventilace", 39: "PohotMAN",
+    40: "Zatěžuje", 41: "ČekáNaStp", 42: "Prohřev", 43: "Odlehčení", 44: "Inicializ",
+    45: "Styk. VYP", 46: "OstrProv.", 47: "SíťProvoz", 48: "ProvParal", 49: "ZpětSynch",
+    50: "Fázování", 51: "VýpadSítě", 52: "Start Zpo", 53: "NávratSíť", 54: "ParalOstr",
+    55: "ParalSit", 56: "PohotMAN", 57: "ŽádnýČas.", 58: "StSíť ZAP", 59: "NávratZpo",
+    60: "Přech Zpo", 61: "Volnoběh", 62: "MinStabČa", 63: "MaxStabČa", 64: "Dochlaz.",
+    65: "StGenOtev", 66: "StopVenti", 67: "VypšOtSty", 68: "VypršČsyn", 69: "StartSync",
+    70: "VentPlyn", 71: "PříšStart", 72: "PříštStop", 73: "StartSyst", 74: "StopSyst",
+    75: "Prohřev", 76: "OdlehStop", 77: "Žádný", 78: "Prohřev", 79: "KonstVýk",
+    80: "IMP/EXP",
+}
+
+# Režimy (registr 43204): synchronní dle List#7, asynchronní ověřeno na jednotce
+SYNC_MODE_MAP = {"VYP": 0, "MAN": 1, "SEM": 2, "AUT": 3}
+
+
 class TedomPlugin:
     NAME = "Tedom Cogeneration"
+
+    def __init__(self, gen_type=None):
+        """Číselníky režimů a stavů podle typu generátoru (výchozí = asynchronní)."""
+        self.gen_type = gen_type
+        if gen_type == GEN_TYPE_SYNC:
+            self.SENSOR_TYPES = [
+                dataclasses.replace(d, value_map=SYNC_STATE_MAP)
+                if d.key in ("engine_state", "breaker_state") else d
+                for d in self.SENSOR_TYPES
+            ]
+            self.SELECT_TYPES = [
+                dataclasses.replace(d, options_map=SYNC_MODE_MAP) if d.key == "mode_selector" else d
+                for d in self.SELECT_TYPES
+            ]
 
     # Adresa = číslo registru z tabulky GenConfigu − 40001 (např. 40021 → 20).
     # interval_group: 1 = každý cyklus, 2 = cca 1× za minutu, 3 = cca 1× za 10 minut.
@@ -124,7 +161,7 @@ class TedomPlugin:
 
     BUTTON_TYPES = [
         TedomButtonEntityDescription(key="cmd_fault_reset", name="Reset poruch", address=409, payload=1, icon="mdi:alert-remove"), # Funkční
-        # ComAp příkazy přes registry 46359-46361 (funguje v režimu SEM, v AUT je controller ignoruje)
+        # ComAp příkazy přes registry 46359-46361 (funguje v SEM/MAN, v AUT je controller ignoruje)
         TedomButtonEntityDescription(key="cmd_engine_start", name="Start motoru", command=0x01FE0000, command_return=0x000001FF, icon="mdi:play"),
         TedomButtonEntityDescription(key="cmd_engine_stop", name="Stop motoru", command=0x02FD0000, command_return=0x000002FE, icon="mdi:stop"),
     ]

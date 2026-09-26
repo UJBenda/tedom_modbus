@@ -20,6 +20,7 @@ from pymodbus.client import AsyncModbusTcpClient
 from .pymodbus_compat import DataType, convert_from_registers, ADDR_KW
 from .plugin_tedom import TedomPlugin
 from .const import (
+    CONF_GEN_TYPE,
     DOMAIN, 
     CONF_MODBUS_ADDR, 
     DEFAULT_MODBUS_ADDR,
@@ -33,7 +34,8 @@ PLATFORMS = [Platform.SENSOR, Platform.BUTTON, Platform.SELECT, Platform.NUMBER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Nastavení instance integrace a okamžité načtení dat."""
-    config = entry.options if entry.options else entry.data
+    # Možnosti (options) doplňují původní data – název z data zůstává (ID entit se nemění)
+    config = {**entry.data, **entry.options}
     
     hub = TedomHub(
         hass, 
@@ -43,7 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config.get(CONF_SCAN_INTERVAL, 15),
         config.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR),
         config.get(CONF_SCAN_INTERVAL_2, 60),
-        config.get(CONF_SCAN_INTERVAL_3, 900)
+        config.get(CONF_SCAN_INTERVAL_3, 900),
+        config.get(CONF_GEN_TYPE),
     )
     
     if not await hub.async_connect():
@@ -52,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hub._client.close()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"hub": hub}
+    # Změna v Možnostech (např. typ generátoru) se projeví hned, bez restartu HA
+    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # OKAMŽITÉ NAČTENÍ: Nečekáme na interval a hned naplníme entity daty
@@ -68,6 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     
     return True
 
+async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    await hass.config_entries.async_reload(entry.entry_id)
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Odstranění instance integrace."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -78,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TedomHub:
     """Hub pro komunikaci s Tedomem."""
 
-    def __init__(self, hass, name, host, port, int1, modbus_addr, int2, int3):
+    def __init__(self, hass, name, host, port, int1, modbus_addr, int2, int3, gen_type=None):
         self._hass = hass
         self._name = name
         self._host = host
@@ -86,7 +94,7 @@ class TedomHub:
         self.interval_1, self.interval_2, self.interval_3 = int1, int2, int3
         self._modbus_addr = modbus_addr
         
-        self.plugin = TedomPlugin()
+        self.plugin = TedomPlugin(gen_type)
         self.data = {}
         self.entities = [] 
         self._client = AsyncModbusTcpClient(host=host, port=port, timeout=5)

@@ -8,7 +8,8 @@
           "host": "Adresa (IP)",
           "port": "Modbus TCP port",
           "modbus_address": "Modbus adresa (ID řídicí jednotky)",
-          "scan_interval": "Interval čtení (s)"
+          "scan_interval": "Interval čtení (s)",
+          "generator_type": "Typ generátoru"
         }
       }
     },
@@ -24,7 +25,8 @@
           "host": "Adresa (IP)",
           "port": "Modbus TCP port",
           "modbus_address": "Modbus adresa (ID řídicí jednotky)",
-          "scan_interval": "Interval čtení (s)"
+          "scan_interval": "Interval čtení (s)",
+          "generator_type": "Typ generátoru"
         }
       }
     }
