@@ -14,6 +14,15 @@ CONF_MODBUS_ADDR = "modbus_address"
 CONF_SCAN_INTERVAL_2 = "scan_interval_2"
 CONF_SCAN_INTERVAL_3 = "scan_interval_3"
 
+# Typ generátoru – určuje číselník režimů a stavů
+CONF_GEN_TYPE = "generator_type"
+GEN_TYPE_ASYNC = "async"  # asynchronní: režimy VYP/SEM/AUT (bez MAN)
+GEN_TYPE_SYNC = "sync"    # synchronní (např. 584): režimy VYP/MAN/SEM/AUT dle List#7
+GEN_TYPES = {
+    GEN_TYPE_ASYNC: "Asynchronní generátor (VYP / SEM / AUT)",
+    GEN_TYPE_SYNC: "Synchronní generátor (VYP / MAN / SEM / AUT)",
+}
+
 DEFAULT_NAME = "Tedom"
 DEFAULT_PORT = 502
 DEFAULT_MODBUS_ADDR = 1

@@ -20,6 +20,7 @@ from pymodbus.client import AsyncModbusTcpClient
 from .pymodbus_compat import DataType, convert_from_registers, ADDR_KW
 from .plugin_tedom import TedomPlugin
 from .const import (
+    CONF_GEN_TYPE,
     DOMAIN, 
     CONF_MODBUS_ADDR, 
     DEFAULT_MODBUS_ADDR,
@@ -33,7 +34,8 @@ PLATFORMS = [Platform.SENSOR, Platform.BUTTON, Platform.SELECT, Platform.NUMBER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Nastavení instance integrace a okamžité načtení dat."""
-    config = entry.options if entry.options else entry.data
+    # Možnosti (options) doplňují původní data – název z data zůstává (ID entit se nemění)
+    config = {**entry.data, **entry.options}
     
     hub = TedomHub(
         hass, 
@@ -43,7 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config.get(CONF_SCAN_INTERVAL, 15),
         config.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR),
         config.get(CONF_SCAN_INTERVAL_2, 60),
-        config.get(CONF_SCAN_INTERVAL_3, 900)
+        config.get(CONF_SCAN_INTERVAL_3, 900),
+        config.get(CONF_GEN_TYPE),
     )
     
     if not await hub.async_connect():
@@ -52,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hub._client.close()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"hub": hub}
+    # Změna v Možnostech (např. typ generátoru) se projeví hned, bez restartu HA
+    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # OKAMŽITÉ NAČTENÍ: Nečekáme na interval a hned naplníme entity daty
@@ -68,6 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     
     return True
 
+async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    await hass.config_entries.async_reload(entry.entry_id)
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Odstranění instance integrace."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -78,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TedomHub:
     """Hub pro komunikaci s Tedomem."""
 
-    def __init__(self, hass, name, host, port, int1, modbus_addr, int2, int3):
+    def __init__(self, hass, name, host, port, int1, modbus_addr, int2, int3, gen_type=None):
         self._hass = hass
         self._name = name
         self._host = host
@@ -86,7 +94,7 @@ class TedomHub:
         self.interval_1, self.interval_2, self.interval_3 = int1, int2, int3
         self._modbus_addr = modbus_addr
         
-        self.plugin = TedomPlugin()
+        self.plugin = TedomPlugin(gen_type)
         self.data = {}
         self.entities = [] 
         self._client = AsyncModbusTcpClient(host=host, port=port, timeout=5)
@@ -121,6 +129,7 @@ class TedomHub:
             if hasattr(self.plugin, "SELECT_TYPES"): to_read.extend(self.plugin.SELECT_TYPES)
             if hasattr(self.plugin, "NUMBER_TYPES"): to_read.extend(self.plugin.NUMBER_TYPES)
 
+            cache = {}  # stejný registr (např. bitové vstupy) čteme v jednom cyklu jen jednou
             try:
                 for desc in to_read:
                     group = getattr(desc, "interval_group", 1)
@@ -128,11 +137,16 @@ class TedomHub:
 
                     try:
                         count = 2 if getattr(desc, "data_type", "") in ["uint32", "int32"] else 1
-                        result = await self._client.read_holding_registers(
-                            address=desc.address, 
-                            count=count, 
-                            **{ADDR_KW: self._modbus_addr}
-                        )
+                        cache_key = (desc.address, count)
+                        result = cache.get(cache_key)
+                        if result is None:
+                            result = await self._client.read_holding_registers(
+                                address=desc.address,
+                                count=count,
+                                **{ADDR_KW: self._modbus_addr}
+                            )
+                            cache[cache_key] = result
+                            await asyncio.sleep(0.08) # Pauza pro stabilitu
 
                         if result and not result.isError():
                             dt = getattr(DataType, getattr(desc, "data_type", "UINT16").upper(), DataType.UINT16)
@@ -146,12 +160,10 @@ class TedomHub:
                                 if getattr(desc, "scale", 1.0) == 1.0:
                                     self.data[desc.key] = int(val)
                                 else:
-                                    self.data[desc.key] = val * desc.scale
+                                    self.data[desc.key] = round(val * desc.scale, 4)  # bez šumu typu 27.200000000003
                                 self._read_errors.discard(desc.key)
                         else:
                             self._log_read_error(desc, result)
-
-                        await asyncio.sleep(0.08) # Pauza pro stabilitu
 
                     except Exception as e:
                         self._log_read_error(desc, e)
@@ -171,7 +183,8 @@ class TedomHub:
                 self._client.close() # Vždy uvolnit TCP slot
 
             for entity in self.entities:
-                if hasattr(entity, "async_write_ha_state"):
+                # Vypnuté entity (entity_registry_enabled_default=False) nejsou v HA přidané
+                if entity.hass is not None and entity.enabled:
                     entity.async_write_ha_state()
 
     def _log_read_error(self, desc, error):
@@ -221,7 +234,7 @@ class TedomHub:
             if await self.async_connect():
                 try:
                     await self._client.write_register(
-                        address=address, value=int(value), **{ADDR_KW: self._modbus_addr}
+                        address=address, value=int(value) & 0xFFFF, **{ADDR_KW: self._modbus_addr}  # záporné int16 jako dvojkový doplněk
                     )
                     await asyncio.sleep(0.5)
                     self._hass.async_create_task(self.async_refresh_modbus_data())
