@@ -26,33 +26,6 @@ sections:
           columns: 12
         features:
           - type: select-options
-      # Start/Stop funguje jen v režimu SEM (u synchronních jednotek i MAN)
-      - type: tile
-        entity: button.47_start_motoru
-        name: Start motoru
-        icon: mdi:play
-        color: green
-        hide_state: true
-        tap_action:
-          action: perform-action
-          perform_action: button.press
-          target:
-            entity_id: button.47_start_motoru
-          confirmation:
-            text: Opravdu nastartovat kogeneraci 47?
-      - type: tile
-        entity: button.47_stop_motoru
-        name: Stop motoru
-        icon: mdi:stop
-        color: red
-        hide_state: true
-        tap_action:
-          action: perform-action
-          perform_action: button.press
-          target:
-            entity_id: button.47_stop_motoru
-          confirmation:
-            text: Opravdu zastavit kogeneraci 47?
       - type: tile
         entity: number.47_pozadovany_vykon_2
         name: Požadovaný výkon
@@ -68,13 +41,43 @@ sections:
           - type: numeric-input
             style: buttons
       - type: tile
+        entity: button.47_start_motoru
+        name: Start
+        icon: mdi:play-circle
+        color: green
+        hide_state: true
+        grid_options:
+          columns: 4
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.47_start_motoru
+          confirmation:
+            text: Opravdu nastartovat motor?
+      - type: tile
+        entity: button.47_stop_motoru
+        name: Stop
+        icon: mdi:stop-circle
+        color: red
+        hide_state: true
+        grid_options:
+          columns: 4
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.47_stop_motoru
+          confirmation:
+            text: Opravdu zastavit motor?
+      - type: tile
         entity: button.47_reset_poruch
-        name: Reset poruch
+        name: Reset
         icon: mdi:restart-alert
         color: orange
         hide_state: true
         grid_options:
-          columns: 12
+          columns: 4
         tap_action:
           action: perform-action
           perform_action: button.press
@@ -92,7 +95,10 @@ sections:
             entity: binary_sensor.47_plan_bezet_ted
             show_state: true
             show_icon: true
-            name: Běžet teď
+          - type: entity
+            entity: sensor.47_plan_dalsi_start
+            show_state: true
+            show_icon: true
       - type: tile
         entity: select.47_planovac_rezim
         name: Režim plánovače
@@ -102,24 +108,17 @@ sections:
         features:
           - type: select-options
       - type: tile
-        entity: sensor.47_plan_dalsi_start
-        name: Další start
-        icon: mdi:clock-outline
-        grid_options:
-          columns: 12
-      - type: tile
         entity: sensor.47_plan_dnes
         name: Plán dnes
         icon: mdi:calendar-today
         grid_options:
-          columns: 12
+          columns: 6
       - type: tile
         entity: sensor.47_plan_zitra
         name: Plán zítra
         icon: mdi:calendar-arrow-right
         grid_options:
-          columns: 12
-      # Nastavení se skryje, když je plánovač vypnutý
+          columns: 6
       - type: tile
         entity: select.47_planovac_strategie
         name: Strategie
@@ -128,7 +127,7 @@ sections:
           columns: 12
         features:
           - type: select-options
-        visibility:
+        visibility: &id001
           - condition: state
             entity: select.47_planovac_rezim
             state_not: Vypnuto
@@ -139,10 +138,7 @@ sections:
         features:
           - type: numeric-input
             style: buttons
-        visibility:
-          - condition: state
-            entity: select.47_planovac_rezim
-            state_not: Vypnuto
+        visibility: *id001
       - type: tile
         entity: number.47_planovac_bloky_na_beh_15_min
         name: Bloky na běh (15 min)
@@ -150,10 +146,7 @@ sections:
         features:
           - type: numeric-input
             style: buttons
-        visibility:
-          - condition: state
-            entity: select.47_planovac_rezim
-            state_not: Vypnuto
+        visibility: *id001
       - type: tile
         entity: number.47_planovac_cena_startu
         name: Cena startu
@@ -161,10 +154,7 @@ sections:
         features:
           - type: numeric-input
             style: buttons
-        visibility:
-          - condition: state
-            entity: select.47_planovac_rezim
-            state_not: Vypnuto
+        visibility: *id001
       - type: tile
         entity: number.47_planovac_vykon_0_jmenovity
         name: Výkon pro výpočet
@@ -172,24 +162,26 @@ sections:
         features:
           - type: numeric-input
             style: buttons
-        visibility:
-          - condition: state
-            entity: select.47_planovac_rezim
-            state_not: Vypnuto
-      - type: entities
-        title: Kdy smí běžet
-        state_color: true
-        entities:
-          - entity: time.47_planovac_smi_bezet_od
-            name: Od
-          - entity: time.47_planovac_smi_bezet_do
-            name: Do
-          - entity: switch.47_planovac_nejet_pri_zaporne_cene
-            name: Nejet při záporné ceně
-        visibility:
-          - condition: state
-            entity: select.47_planovac_rezim
-            state_not: Vypnuto
+        visibility: *id001
+      - type: tile
+        entity: time.47_planovac_smi_bezet_od
+        name: Smí běžet od
+        icon: mdi:clock-start
+        visibility: *id001
+      - type: tile
+        entity: time.47_planovac_smi_bezet_do
+        name: Smí běžet do
+        icon: mdi:clock-end
+        visibility: *id001
+      - type: tile
+        entity: switch.47_planovac_nejet_pri_zaporne_cene
+        name: Nejet při záporné ceně
+        icon: mdi:cash-remove
+        grid_options:
+          columns: 12
+        features:
+          - type: toggle
+        visibility: *id001
       - type: tile
         entity: number.47_planovac_teplota_nadrze_plny_beh
         name: Nádrž – plný běh pod
@@ -197,7 +189,7 @@ sections:
         features:
           - type: numeric-input
             style: buttons
-        visibility:
+        visibility: &id002
           - condition: state
             entity: select.47_planovac_rezim
             state: Podle teploty
@@ -208,24 +200,24 @@ sections:
         features:
           - type: numeric-input
             style: buttons
-        visibility:
-          - condition: state
-            entity: select.47_planovac_rezim
-            state: Podle teploty
+        visibility: *id002
       - type: tile
         entity: number.47_planovac_pojistka_max_teploty
         name: Pojistka max. teploty
         icon: mdi:thermometer-alert
-        grid_options:
-          columns: 12
         features:
           - type: numeric-input
             style: buttons
+        grid_options:
+          columns: 12
       - type: tile
         entity: button.47_prepocitat_plan_zitrka
         name: Přepočítat zítřek
         icon: mdi:calendar-refresh
+        color: blue
         hide_state: true
+        grid_options:
+          columns: 6
         tap_action:
           action: perform-action
           perform_action: button.press
@@ -235,7 +227,10 @@ sections:
         entity: button.47_prepocitat_zbytek_dneska
         name: Přepočítat dnešek
         icon: mdi:calendar-today
+        color: blue
         hide_state: true
+        grid_options:
+          columns: 6
         tap_action:
           action: perform-action
           perform_action: button.press
