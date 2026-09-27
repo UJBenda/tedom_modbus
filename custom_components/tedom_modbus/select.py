@@ -4,6 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.device_registry import DeviceInfo
 from .const import DOMAIN
+from . import planner_entities
 from .plugin_tedom import TedomPlugin
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
@@ -17,6 +18,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         
         # Přidáme entity do seznamu v Hubu pro aktualizaci stavu
         hub.entities.extend(entities)
+
+    # Entity plánovače podle spotových cen
+    async_add_entities(planner_entities.selects(hass.data[DOMAIN][entry.entry_id]["planner"]))
 
 class TedomSelect(SelectEntity):
     """Reprezentace přepínače režimu (Read/Write) přes Modbus."""

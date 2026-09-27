@@ -1,0 +1,84 @@
+# Řídicí panel "Kogenerace" – jen vestavěné karty HA.
+# Vložení: Nastavení → Řídicí panely → Přidat → Nový od začátku → ⋮ → Editor kódu.
+# Entity jsou pro zařízení pojmenované "584". Pro jinou jednotku nahraď "584_" jejím názvem
+# (např. "47_") a sloupec zkopíruj.
+title: Kogenerace
+views:
+  - title: Kogenerace
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: KJ 584
+            badges:
+              - entity: binary_sensor.584_plan_bezet_ted
+              - entity: sensor.584_stav_motoru
+              - entity: sensor.584_aktualni_vykon
+          - type: entities
+            title: Plán
+            entities:
+              - entity: sensor.584_plan_dalsi_start
+              - entity: sensor.584_plan_dnes
+              - entity: sensor.584_plan_zitra
+              - type: attribute
+                entity: sensor.584_plan_zitra
+                attribute: prumerna_cena
+                name: Průměrná cena zítra
+              - type: attribute
+                entity: sensor.584_plan_zitra
+                attribute: poznamka
+                name: Poznámka
+          - type: entities
+            title: Nastavení plánovače
+            entities:
+              - entity: select.584_planovac_rezim
+              - entity: select.584_planovac_strategie
+              - entity: switch.584_planovac_nejet_pri_zaporne_cene
+              - entity: time.584_planovac_smi_bezet_od
+              - entity: time.584_planovac_smi_bezet_do
+              - entity: number.584_planovac_pocet_startu
+              - entity: number.584_planovac_bloky_na_beh_15_min
+              - entity: number.584_planovac_cena_startu
+              - entity: number.584_planovac_vykon_0_jmenovity
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.584_planovac_rezim
+                state: Podle teploty
+            card:
+              type: entities
+              title: Podle teploty nádrže
+              entities:
+                - entity: number.584_planovac_teplota_nadrze_plny_beh
+                - entity: number.584_planovac_teplota_nadrze_bez_behu
+          - type: entities
+            entities:
+              - entity: number.584_planovac_pojistka_max_teploty
+          - type: horizontal-stack
+            cards:
+              - type: button
+                entity: button.584_prepocitat_plan_zitrka
+                name: Přepočítat zítřek
+                tap_action:
+                  action: perform-action
+                  perform_action: button.press
+                  target:
+                    entity_id: button.584_prepocitat_plan_zitrka
+              - type: button
+                entity: button.584_prepocitat_zbytek_dneska
+                name: Přepočítat zbytek dneška
+                tap_action:
+                  action: perform-action
+                  perform_action: button.press
+                  target:
+                    entity_id: button.584_prepocitat_zbytek_dneska
+                  confirmation:
+                    text: Přepočítat plán na zbytek dneška?
+          - type: entities
+            title: Ruční ovládání
+            entities:
+              - entity: select.584_rezim_stroje
+              - entity: button.584_start_motoru
+              - entity: button.584_stop_motoru
+              - entity: button.584_reset_poruch

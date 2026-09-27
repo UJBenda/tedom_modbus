@@ -23,6 +23,11 @@ GEN_TYPES = {
     GEN_TYPE_SYNC: "Synchronní generátor (VYP / MAN / SEM / AUT)",
 }
 
+# Plánovač podle spotových cen
+CONF_PRICE_ENTITY = "price_entity"
+CONF_TANK_TEMP_ENTITY = "tank_temp_entity"
+DEFAULT_PRICE_ENTITY = "sensor.current_spot_electricity_price"
+
 DEFAULT_NAME = "Tedom"
 DEFAULT_PORT = 502
 DEFAULT_MODBUS_ADDR = 1

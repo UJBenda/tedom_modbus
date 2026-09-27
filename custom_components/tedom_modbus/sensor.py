@@ -4,6 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.device_registry import DeviceInfo
 from .const import DOMAIN
+from . import planner_entities
 from .plugin_tedom import TedomPlugin
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -12,6 +13,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities = [TedomSensor(hub, desc) for desc in hub.plugin.SENSOR_TYPES]
         async_add_entities(entities)
         hub.entities.extend(entities)
+
+    # Entity plánovače podle spotových cen
+    async_add_entities(planner_entities.sensors(hass.data[DOMAIN][entry.entry_id]["planner"]))
 
 class TedomSensor(SensorEntity):
     _attr_has_entity_name = True

@@ -2,12 +2,16 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers import selector
 from .const import (
     DOMAIN, DEFAULT_PORT, DEFAULT_NAME, CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR,
     DEFAULT_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_2, DEFAULT_SCAN_INTERVAL_3,
     CONF_SCAN_INTERVAL_2, CONF_SCAN_INTERVAL_3,
     CONF_GEN_TYPE, GEN_TYPES, GEN_TYPE_ASYNC,
+    CONF_PRICE_ENTITY, CONF_TANK_TEMP_ENTITY, DEFAULT_PRICE_ENTITY,
 )
+
+_SENSOR_SELECTOR = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor"))
 
 class TedomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -41,4 +45,7 @@ class TedomOptionsFlowHandler(config_entries.OptionsFlow):
             vol.Required(CONF_MODBUS_ADDR, default=opts.get(CONF_MODBUS_ADDR, conf.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))): int,
             vol.Required(CONF_GEN_TYPE, default=opts.get(CONF_GEN_TYPE, conf.get(CONF_GEN_TYPE, GEN_TYPE_ASYNC))): vol.In(GEN_TYPES),
             vol.Optional(CONF_SCAN_INTERVAL, default=opts.get(CONF_SCAN_INTERVAL, conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))): int,
+            # Plánovač podle spotových cen
+            vol.Optional(CONF_PRICE_ENTITY, default=opts.get(CONF_PRICE_ENTITY, conf.get(CONF_PRICE_ENTITY, DEFAULT_PRICE_ENTITY))): _SENSOR_SELECTOR,
+            vol.Optional(CONF_TANK_TEMP_ENTITY, description={"suggested_value": opts.get(CONF_TANK_TEMP_ENTITY, conf.get(CONF_TANK_TEMP_ENTITY))}): _SENSOR_SELECTOR,
         }))
