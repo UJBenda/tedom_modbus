@@ -11,7 +11,13 @@ from .const import (
     CONF_PRICE_ENTITY, CONF_TANK_TEMP_ENTITY, DEFAULT_PRICE_ENTITY,
 )
 
-_SENSOR_SELECTOR = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor"))
+# Výběr senzoru ceny jen z integrace Czech Energy Spot Prices, teploty jen z teplotních senzorů
+_PRICE_SELECTOR = selector.EntitySelector(
+    selector.EntitySelectorConfig(domain="sensor", integration="cz_energy_spot_prices")
+)
+_TEMP_SELECTOR = selector.EntitySelector(
+    selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
+)
 
 class TedomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -25,6 +31,8 @@ class TedomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_MODBUS_ADDR, default=DEFAULT_MODBUS_ADDR): int,
             vol.Required(CONF_GEN_TYPE, default=GEN_TYPE_ASYNC): vol.In(GEN_TYPES),
             vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
+            vol.Optional(CONF_PRICE_ENTITY, default=DEFAULT_PRICE_ENTITY): _PRICE_SELECTOR,
+            vol.Optional(CONF_TANK_TEMP_ENTITY): _TEMP_SELECTOR,
         }))
 
     @staticmethod
@@ -46,6 +54,6 @@ class TedomOptionsFlowHandler(config_entries.OptionsFlow):
             vol.Required(CONF_GEN_TYPE, default=opts.get(CONF_GEN_TYPE, conf.get(CONF_GEN_TYPE, GEN_TYPE_ASYNC))): vol.In(GEN_TYPES),
             vol.Optional(CONF_SCAN_INTERVAL, default=opts.get(CONF_SCAN_INTERVAL, conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))): int,
             # Plánovač podle spotových cen
-            vol.Optional(CONF_PRICE_ENTITY, default=opts.get(CONF_PRICE_ENTITY, conf.get(CONF_PRICE_ENTITY, DEFAULT_PRICE_ENTITY))): _SENSOR_SELECTOR,
-            vol.Optional(CONF_TANK_TEMP_ENTITY, description={"suggested_value": opts.get(CONF_TANK_TEMP_ENTITY, conf.get(CONF_TANK_TEMP_ENTITY))}): _SENSOR_SELECTOR,
+            vol.Optional(CONF_PRICE_ENTITY, default=opts.get(CONF_PRICE_ENTITY, conf.get(CONF_PRICE_ENTITY, DEFAULT_PRICE_ENTITY))): _PRICE_SELECTOR,
+            vol.Optional(CONF_TANK_TEMP_ENTITY, description={"suggested_value": opts.get(CONF_TANK_TEMP_ENTITY, conf.get(CONF_TANK_TEMP_ENTITY))}): _TEMP_SELECTOR,
         }))

@@ -140,6 +140,9 @@ class PlanDaySensor(PlannerEntity, SensorEntity):
             "spocitano": plan.get("computed_at"),
             "behy": plan.get("runs", []),
             "posledni_chyba": self.planner.last_error,
+            "cenovy_senzor": self.planner.price_entity,
+            "senzor_teploty_nadrze": self.planner.tank_temp_entity,
+            "teplota_nadrze": self.planner._tank_temp(),
         }
 
 
@@ -183,7 +186,7 @@ def numbers(p):
     return [
         PlannerNumber(p, "runs", "Plánovač počet startů", "mdi:counter", 1, 10, 1),
         PlannerNumber(p, "blocks", "Plánovač bloky na běh (15 min)", "mdi:timer-sand", 1, 16, 1),
-        PlannerNumber(p, "penalty", "Plánovač cena startu", "mdi:cash", 0, 5000, 10, "Kč"),
+        PlannerNumber(p, "penalty", "Plánovač cena startu", "mdi:cash", 0, 10000, 0.01, "Kč"),
         PlannerNumber(p, "power_kw", "Plánovač výkon (0 = jmenovitý)", "mdi:lightning-bolt", 0, 5000, 1, UnitOfPower.KILO_WATT),
         PlannerNumber(p, "temp_cold", "Plánovač teplota nádrže – plný běh", "mdi:thermometer-low", 0, 120, 1, UnitOfTemperature.CELSIUS),
         PlannerNumber(p, "temp_warm", "Plánovač teplota nádrže – bez běhu", "mdi:thermometer-high", 0, 120, 1, UnitOfTemperature.CELSIUS),

@@ -1,0 +1,351 @@
+type: sections
+title: Tedom 47
+path: tedom-47
+icon: mdi:engine
+max_columns: 4
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: Ovládání
+        icon: mdi:tune-vertical
+        badges:
+          - type: entity
+            entity: sensor.47_stav_motoru
+            show_state: true
+            show_icon: true
+          - type: entity
+            entity: sensor.47_stav_jistice
+            show_state: true
+            show_icon: true
+      - type: tile
+        entity: select.47_rezim_stroje
+        name: Režim stroje
+        icon: mdi:cog
+        grid_options:
+          columns: 12
+        features:
+          - type: select-options
+      # Start/Stop funguje jen v režimu SEM (u synchronních jednotek i MAN)
+      - type: tile
+        entity: button.47_start_motoru
+        name: Start motoru
+        icon: mdi:play
+        color: green
+        hide_state: true
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.47_start_motoru
+          confirmation:
+            text: Opravdu nastartovat kogeneraci 47?
+      - type: tile
+        entity: button.47_stop_motoru
+        name: Stop motoru
+        icon: mdi:stop
+        color: red
+        hide_state: true
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.47_stop_motoru
+          confirmation:
+            text: Opravdu zastavit kogeneraci 47?
+      - type: tile
+        entity: number.47_pozadovany_vykon_2
+        name: Požadovaný výkon
+        icon: mdi:flash
+        features:
+          - type: numeric-input
+            style: buttons
+      - type: tile
+        entity: number.47_pozadovana_teplota
+        name: Požadovaná teplota
+        icon: mdi:thermometer
+        features:
+          - type: numeric-input
+            style: buttons
+      - type: tile
+        entity: button.47_reset_poruch
+        name: Reset poruch
+        icon: mdi:restart-alert
+        color: orange
+        hide_state: true
+        grid_options:
+          columns: 12
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.47_reset_poruch
+          confirmation:
+            text: Opravdu resetovat poruchy?
+  - type: grid
+    cards:
+      - type: heading
+        heading: Plánovač podle spotu
+        icon: mdi:calendar-clock
+        badges:
+          - type: entity
+            entity: binary_sensor.47_plan_bezet_ted
+            show_state: true
+            show_icon: true
+            name: Běžet teď
+      - type: tile
+        entity: select.47_planovac_rezim
+        name: Režim plánovače
+        icon: mdi:calendar-sync
+        grid_options:
+          columns: 12
+        features:
+          - type: select-options
+      - type: tile
+        entity: sensor.47_plan_dalsi_start
+        name: Další start
+        icon: mdi:clock-outline
+        grid_options:
+          columns: 12
+      - type: tile
+        entity: sensor.47_plan_dnes
+        name: Plán dnes
+        icon: mdi:calendar-today
+        grid_options:
+          columns: 12
+      - type: tile
+        entity: sensor.47_plan_zitra
+        name: Plán zítra
+        icon: mdi:calendar-arrow-right
+        grid_options:
+          columns: 12
+      # Nastavení se skryje, když je plánovač vypnutý
+      - type: tile
+        entity: select.47_planovac_strategie
+        name: Strategie
+        icon: mdi:chart-line
+        grid_options:
+          columns: 12
+        features:
+          - type: select-options
+        visibility:
+          - condition: state
+            entity: select.47_planovac_rezim
+            state_not: Vypnuto
+      - type: tile
+        entity: number.47_planovac_pocet_startu
+        name: Počet startů
+        icon: mdi:counter
+        features:
+          - type: numeric-input
+            style: buttons
+        visibility:
+          - condition: state
+            entity: select.47_planovac_rezim
+            state_not: Vypnuto
+      - type: tile
+        entity: number.47_planovac_bloky_na_beh_15_min
+        name: Bloky na běh (15 min)
+        icon: mdi:timer-sand
+        features:
+          - type: numeric-input
+            style: buttons
+        visibility:
+          - condition: state
+            entity: select.47_planovac_rezim
+            state_not: Vypnuto
+      - type: tile
+        entity: number.47_planovac_cena_startu
+        name: Cena startu
+        icon: mdi:cash
+        features:
+          - type: numeric-input
+            style: buttons
+        visibility:
+          - condition: state
+            entity: select.47_planovac_rezim
+            state_not: Vypnuto
+      - type: tile
+        entity: number.47_planovac_vykon_0_jmenovity
+        name: Výkon pro výpočet
+        icon: mdi:lightning-bolt
+        features:
+          - type: numeric-input
+            style: buttons
+        visibility:
+          - condition: state
+            entity: select.47_planovac_rezim
+            state_not: Vypnuto
+      - type: entities
+        title: Kdy smí běžet
+        state_color: true
+        entities:
+          - entity: time.47_planovac_smi_bezet_od
+            name: Od
+          - entity: time.47_planovac_smi_bezet_do
+            name: Do
+          - entity: switch.47_planovac_nejet_pri_zaporne_cene
+            name: Nejet při záporné ceně
+        visibility:
+          - condition: state
+            entity: select.47_planovac_rezim
+            state_not: Vypnuto
+      - type: tile
+        entity: number.47_planovac_teplota_nadrze_plny_beh
+        name: Nádrž – plný běh pod
+        icon: mdi:thermometer-low
+        features:
+          - type: numeric-input
+            style: buttons
+        visibility:
+          - condition: state
+            entity: select.47_planovac_rezim
+            state: Podle teploty
+      - type: tile
+        entity: number.47_planovac_teplota_nadrze_bez_behu
+        name: Nádrž – bez běhu nad
+        icon: mdi:thermometer-high
+        features:
+          - type: numeric-input
+            style: buttons
+        visibility:
+          - condition: state
+            entity: select.47_planovac_rezim
+            state: Podle teploty
+      - type: tile
+        entity: number.47_planovac_pojistka_max_teploty
+        name: Pojistka max. teploty
+        icon: mdi:thermometer-alert
+        grid_options:
+          columns: 12
+        features:
+          - type: numeric-input
+            style: buttons
+      - type: tile
+        entity: button.47_prepocitat_plan_zitrka
+        name: Přepočítat zítřek
+        icon: mdi:calendar-refresh
+        hide_state: true
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.47_prepocitat_plan_zitrka
+      - type: tile
+        entity: button.47_prepocitat_zbytek_dneska
+        name: Přepočítat dnešek
+        icon: mdi:calendar-today
+        hide_state: true
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.47_prepocitat_zbytek_dneska
+          confirmation:
+            text: Přepočítat plán na zbytek dneška?
+  - type: grid
+    cards:
+      - type: heading
+        heading: Výkon
+        icon: mdi:lightning-bolt
+      - type: gauge
+        entity: sensor.47_aktualni_vykon
+        name: Aktuální výkon
+        min: 0
+        max: 50
+      - type: gauge
+        entity: sensor.47_otacky_motoru
+        name: Otáčky
+        min: 0
+        max: 1800
+      - type: tile
+        entity: sensor.47_frekvence_gen
+        name: Frekvence
+        icon: mdi:sine-wave
+      - type: tile
+        entity: sensor.47_celkova_vyroba_energie
+        name: Vyrobeno celkem
+        icon: mdi:counter
+      - type: history-graph
+        title: Výkon 24 h
+        hours_to_show: 24
+        grid_options:
+          columns: 12
+        entities:
+          - entity: sensor.47_aktualni_vykon
+            name: Výkon
+          - entity: binary_sensor.47_plan_bezet_ted
+            name: Plán
+  - type: grid
+    cards:
+      - type: heading
+        heading: Generátor
+        icon: mdi:current-ac
+      - type: tile
+        entity: sensor.47_napeti_gen_l1
+        name: U L1
+        icon: mdi:alpha-v-circle-outline
+        grid_options:
+          columns: 4
+      - type: tile
+        entity: sensor.47_napeti_gen_l2
+        name: U L2
+        icon: mdi:alpha-v-circle-outline
+        grid_options:
+          columns: 4
+      - type: tile
+        entity: sensor.47_napeti_gen_l3
+        name: U L3
+        icon: mdi:alpha-v-circle-outline
+        grid_options:
+          columns: 4
+      - type: tile
+        entity: sensor.47_proud_gen_l1
+        name: I L1
+        icon: mdi:alpha-a-circle-outline
+        grid_options:
+          columns: 4
+      - type: tile
+        entity: sensor.47_proud_gen_l2
+        name: I L2
+        icon: mdi:alpha-a-circle-outline
+        grid_options:
+          columns: 4
+      - type: tile
+        entity: sensor.47_proud_gen_l3
+        name: I L3
+        icon: mdi:alpha-a-circle-outline
+        grid_options:
+          columns: 4
+  - type: grid
+    cards:
+      - type: heading
+        heading: Stav a servis
+        icon: mdi:wrench
+      - type: tile
+        entity: sensor.47_nouzove_zastaveni_2
+        name: Centrální stop
+        icon: mdi:alert-octagon
+        color: red
+      - type: tile
+        entity: sensor.47_externi_start_stop
+        name: Externí start/stop
+        icon: mdi:power
+      - type: tile
+        entity: sensor.47_hladina_oleje_2
+        name: Hladina oleje
+        icon: mdi:oil-level
+      - type: tile
+        entity: sensor.47_napeti_baterie
+        name: Baterie
+        icon: mdi:car-battery
+      - type: tile
+        entity: sensor.47_motohodiny
+        name: Motohodiny
+        icon: mdi:timer-cog-outline
+      - type: tile
+        entity: sensor.47_pocet_startu
+        name: Počet startů
+        icon: mdi:counter
+cards: []
+show_icon_and_title: true
