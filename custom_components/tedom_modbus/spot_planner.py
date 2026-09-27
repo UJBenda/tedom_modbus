@@ -177,7 +177,7 @@ class TedomSpotPlanner:
                 note.append("teplota nádrže neznámá – plán jako Ručně")
             else:
                 total = blocks_for_temperature(total, min_len, temp, float(s["temp_cold"]), float(s["temp_warm"]))
-                note.append(f"teplota nádrže {temp:.1f} °C → {total} bloků")
+                note.append(f"teplota nádrže {temp:.1f} °C → počet bloků {total}")
 
         if from_now:
             now = dt_util.now()

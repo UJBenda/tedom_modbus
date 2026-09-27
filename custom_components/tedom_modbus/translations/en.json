@@ -9,7 +9,13 @@
           "port": "Modbus TCP port",
           "modbus_address": "Modbus address (controller ID)",
           "scan_interval": "Scan interval (s)",
-          "generator_type": "Generator type"
+          "generator_type": "Generator type",
+          "price_entity": "Spot price sensor (Czech Energy Spot Prices)",
+          "tank_temp_entity": "Tank temperature sensor"
+        },
+        "data_description": {
+          "price_entity": "Planner uses its price attributes (hourly or 15 min). For 15-minute prices pick the sensor ending with _15min.",
+          "tank_temp_entity": "Used by planner mode \"By temperature\" and the max. temperature safety. Leave empty if not used."
         }
       }
     },
@@ -27,8 +33,12 @@
           "modbus_address": "Modbus address (controller ID)",
           "scan_interval": "Scan interval (s)",
           "generator_type": "Generator type",
-          "price_entity": "Spot price sensor (planner)",
-          "tank_temp_entity": "Tank temperature sensor (planner)"
+          "price_entity": "Spot price sensor (Czech Energy Spot Prices)",
+          "tank_temp_entity": "Tank temperature sensor"
+        },
+        "data_description": {
+          "price_entity": "Planner uses its price attributes (hourly or 15 min). For 15-minute prices pick the sensor ending with _15min.",
+          "tank_temp_entity": "Used by planner mode \"By temperature\" and the max. temperature safety. Leave empty if not used."
         }
       }
     }
