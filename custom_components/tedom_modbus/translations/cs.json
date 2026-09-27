@@ -26,7 +26,9 @@
           "port": "Modbus TCP port",
           "modbus_address": "Modbus adresa (ID řídicí jednotky)",
           "scan_interval": "Interval čtení (s)",
-          "generator_type": "Typ generátoru"
+          "generator_type": "Typ generátoru",
+          "price_entity": "Senzor spotové ceny (plánovač)",
+          "tank_temp_entity": "Senzor teploty nádrže (plánovač)"
         }
       }
     }

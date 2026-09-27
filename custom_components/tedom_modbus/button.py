@@ -4,6 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.device_registry import DeviceInfo
 from .const import DOMAIN
+from . import planner_entities
 from .plugin_tedom import TedomPlugin
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
@@ -11,6 +12,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     if hasattr(hub.plugin, "BUTTON_TYPES"):
         entities = [TedomButton(hub, desc) for desc in hub.plugin.BUTTON_TYPES]
         async_add_entities(entities)
+
+    # Entity plánovače podle spotových cen
+    async_add_entities(planner_entities.buttons(hass.data[DOMAIN][entry.entry_id]["planner"]))
 
 class TedomButton(ButtonEntity):
     _attr_has_entity_name = True

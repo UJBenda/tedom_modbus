@@ -1,7 +1,7 @@
 """Integrace Tedom Modbus - Core pro HA 2026.05 s RPM pojistkou."""
 import logging
 import asyncio
-import time
+import time as _time  # "time" by kolidoval s platformou time.py
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,8 +19,12 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from pymodbus.client import AsyncModbusTcpClient
 from .pymodbus_compat import DataType, convert_from_registers, ADDR_KW
 from .plugin_tedom import TedomPlugin
+from .spot_planner import TedomSpotPlanner
 from .const import (
     CONF_GEN_TYPE,
+    CONF_PRICE_ENTITY,
+    CONF_TANK_TEMP_ENTITY,
+    DEFAULT_PRICE_ENTITY,
     DOMAIN, 
     CONF_MODBUS_ADDR, 
     DEFAULT_MODBUS_ADDR,
@@ -30,7 +34,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.BUTTON, Platform.SELECT, Platform.NUMBER]
+PLATFORMS = [
+    Platform.SENSOR, Platform.BUTTON, Platform.SELECT, Platform.NUMBER,
+    Platform.SWITCH, Platform.TIME, Platform.BINARY_SENSOR,
+]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Nastavení instance integrace a okamžité načtení dat."""
@@ -54,10 +61,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         hub._client.close()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"hub": hub}
+    # Plánovač podle spotových cen (nastavení a plány se ukládají do .storage)
+    planner = TedomSpotPlanner(
+        hass, entry.entry_id, hub,
+        config.get(CONF_PRICE_ENTITY, DEFAULT_PRICE_ENTITY),
+        config.get(CONF_TANK_TEMP_ENTITY),
+    )
+    await planner.async_load()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"hub": hub, "planner": planner}
     # Změna v Možnostech (např. typ generátoru) se projeví hned, bez restartu HA
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    planner.start()
+    entry.async_on_unload(planner.stop)
 
     # OKAMŽITÉ NAČTENÍ: Nečekáme na interval a hned naplníme entity daty
     hass.async_create_task(hub.async_refresh_modbus_data())
@@ -120,7 +137,7 @@ class TedomHub:
         async with self._lock:
             if not await self.async_connect(): return
 
-            now = time.time()
+            now = _time.time()
             run_2 = (now - self._last_run_2) >= self.interval_2
             run_3 = (now - self._last_run_3) >= self.interval_3
 
@@ -224,7 +241,7 @@ class TedomHub:
             raise HomeAssistantError(
                 f"Tedom ({self._name}): Controller příkaz neprovedl (vráceno "
                 f"{'?' if returned is None else f'0x{returned:08X}'}, očekáváno 0x{expected_return:08X}). "
-                "Zkontrolujte, že je stroj v režimu SEM."
+                "Zkontrolujte, že je stroj v režimu SEM nebo MAN."
             )
         self._hass.async_create_task(self.async_refresh_modbus_data())
 
