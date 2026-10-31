@@ -3,6 +3,7 @@ title: Tedom 47
 path: tedom-47
 icon: mdi:engine
 max_columns: 4
+show_icon_and_title: true
 sections:
   - type: grid
     cards:
@@ -45,9 +46,9 @@ sections:
         name: Start
         icon: mdi:play-circle
         color: green
-        hide_state: true
         grid_options:
           columns: 4
+        hide_state: true
         tap_action:
           action: perform-action
           perform_action: button.press
@@ -60,9 +61,9 @@ sections:
         name: Stop
         icon: mdi:stop-circle
         color: red
-        hide_state: true
         grid_options:
           columns: 4
+        hide_state: true
         tap_action:
           action: perform-action
           perform_action: button.press
@@ -75,9 +76,9 @@ sections:
         name: Reset
         icon: mdi:restart-alert
         color: orange
-        hide_state: true
         grid_options:
           columns: 4
+        hide_state: true
         tap_action:
           action: perform-action
           perform_action: button.press
@@ -103,10 +104,10 @@ sections:
         entity: select.47_planovac_rezim
         name: Režim plánovače
         icon: mdi:calendar-sync
-        grid_options:
-          columns: 12
         features:
           - type: select-options
+        grid_options:
+          columns: 12
       - type: tile
         entity: sensor.47_plan_dnes
         name: Plán dnes
@@ -123,10 +124,10 @@ sections:
         entity: select.47_planovac_strategie
         name: Strategie
         icon: mdi:chart-line
-        grid_options:
-          columns: 12
         features:
           - type: select-options
+        grid_options:
+          columns: 12
         visibility: &id001
           - condition: state
             entity: select.47_planovac_rezim
@@ -177,10 +178,10 @@ sections:
         entity: switch.47_planovac_nejet_pri_zaporne_cene
         name: Nejet při záporné ceně
         icon: mdi:cash-remove
-        grid_options:
-          columns: 12
         features:
           - type: toggle
+        grid_options:
+          columns: 12
         visibility: *id001
       - type: tile
         entity: number.47_planovac_teplota_nadrze_plny_beh
@@ -245,7 +246,7 @@ sections:
         icon: mdi:lightning-bolt
       - type: gauge
         entity: sensor.47_aktualni_vykon
-        name: Aktuální výkon
+        name: Činný výkon
         min: 0
         max: 50
       - type: gauge
@@ -254,13 +255,21 @@ sections:
         min: 0
         max: 1800
       - type: tile
-        entity: sensor.47_frekvence_gen
-        name: Frekvence
-        icon: mdi:sine-wave
+        entity: sensor.47_vykon_zateze
+        name: Výkon zátěže
+        icon: mdi:home-lightning-bolt
       - type: tile
-        entity: sensor.47_celkova_vyroba_energie
-        name: Vyrobeno celkem
-        icon: mdi:counter
+        entity: sensor.47_vykon_ze_site
+        name: Výkon ze sítě
+        icon: mdi:transmission-tower
+      - type: tile
+        entity: sensor.47_ucinik
+        name: Účiník
+        icon: mdi:angle-acute
+      - type: tile
+        entity: sensor.47_jmenovity_vykon
+        name: Jmenovitý výkon
+        icon: mdi:information-outline
       - type: history-graph
         title: Výkon 24 h
         hours_to_show: 24
@@ -268,7 +277,11 @@ sections:
           columns: 12
         entities:
           - entity: sensor.47_aktualni_vykon
-            name: Výkon
+            name: Generátor
+          - entity: sensor.47_vykon_zateze
+            name: Zátěž
+          - entity: sensor.47_vykon_ze_site
+            name: Síť
           - entity: binary_sensor.47_plan_bezet_ted
             name: Plán
   - type: grid
@@ -276,6 +289,11 @@ sections:
       - type: heading
         heading: Generátor
         icon: mdi:current-ac
+        badges:
+          - type: entity
+            entity: sensor.47_frekvence_gen
+            show_state: true
+            show_icon: false
       - type: tile
         entity: sensor.47_napeti_gen_l1
         name: U L1
@@ -312,11 +330,141 @@ sections:
         icon: mdi:alpha-a-circle-outline
         grid_options:
           columns: 4
+      - type: heading
+        heading: Síť
+        icon: mdi:transmission-tower
+        heading_style: subtitle
+        badges:
+          - type: entity
+            entity: sensor.47_frekvence_site
+            show_state: true
+            show_icon: false
+      - type: tile
+        entity: sensor.47_napeti_site_l1
+        name: U L1
+        icon: mdi:alpha-v-circle-outline
+        grid_options:
+          columns: 4
+      - type: tile
+        entity: sensor.47_napeti_site_l2
+        name: U L2
+        icon: mdi:alpha-v-circle-outline
+        grid_options:
+          columns: 4
+      - type: tile
+        entity: sensor.47_napeti_site_l3
+        name: U L3
+        icon: mdi:alpha-v-circle-outline
+        grid_options:
+          columns: 4
+      - type: heading
+        heading: Stykače a jištění
+        icon: mdi:electric-switch
+        heading_style: subtitle
+      - type: tile
+        entity: sensor.47_stykac_generatoru
+        name: Stykač generátoru
+        icon: mdi:electric-switch
+      - type: tile
+        entity: sensor.47_stykac_generatoru_zpetna_vazba
+        name: Stykač gen. – ZV
+        icon: mdi:electric-switch-closed
+      - type: tile
+        entity: sensor.47_stykac_site_zpetna_vazba
+        name: Stykač sítě – ZV
+        icon: mdi:electric-switch-closed
+      - type: tile
+        entity: sensor.47_nadproud_generatoru
+        name: Nadproud gen.
+        icon: mdi:flash-alert
   - type: grid
     cards:
       - type: heading
-        heading: Stav a servis
-        icon: mdi:wrench
+        heading: Motor a teploty
+        icon: mdi:engine-outline
+      - type: gauge
+        entity: sensor.47_teplota_vody
+        name: Teplota vody
+        min: 0
+        max: 100
+      - type: gauge
+        entity: sensor.47_teplota_sekundarni_vody
+        name: Sekundární voda
+        min: 0
+        max: 100
+      - type: tile
+        entity: sensor.47_teplota_sekce_1
+        name: Teplota sekce 1
+        icon: mdi:thermometer
+      - type: tile
+        entity: sensor.47_teplota_sekce_2
+        name: Teplota sekce 2
+        icon: mdi:thermometer
+      - type: tile
+        entity: sensor.47_tlak_oleje
+        name: Tlak oleje
+        icon: mdi:gauge
+      - type: tile
+        entity: sensor.47_hladina_oleje_2
+        name: Hladina oleje
+        icon: mdi:oil-level
+      - type: tile
+        entity: sensor.47_lambda
+        name: Lambda
+        icon: mdi:lambda
+      - type: tile
+        entity: sensor.47_ventil_paliva
+        name: Ventil paliva
+        icon: mdi:valve
+      - type: tile
+        entity: sensor.47_cerpadlo_paralel
+        name: Čerpadlo paralel
+        icon: mdi:pump
+      - type: tile
+        entity: sensor.47_napeti_baterie
+        name: Baterie
+        icon: mdi:car-battery
+      - type: history-graph
+        title: Teploty 24 h
+        hours_to_show: 24
+        grid_options:
+          columns: 12
+        entities:
+          - entity: sensor.47_teplota_vody
+            name: Voda
+          - entity: sensor.47_teplota_sekundarni_vody
+            name: Sekundár
+          - entity: sensor.47_teplota_sekce_1
+            name: Sekce 1
+          - entity: sensor.47_teplota_sekce_2
+            name: Sekce 2
+  - type: grid
+    cards:
+      - type: heading
+        heading: Poruchy
+        icon: mdi:alert
+      - type: tile
+        entity: sensor.47_aktivni_poruchy_ecu
+        name: Aktivní poruchy ECU
+        icon: mdi:alert-circle
+        color: red
+        grid_options:
+          columns: 12
+      - type: tile
+        entity: sensor.47_ecu_cervena_lampa
+        name: ECU červená
+        icon: mdi:alarm-light
+        color: red
+      - type: tile
+        entity: sensor.47_ecu_zluta_lampa
+        name: ECU žlutá
+        icon: mdi:alarm-light
+        color: amber
+      - type: tile
+        entity: sensor.47_vystraha
+        name: Výstraha
+        icon: mdi:alert
+        color: amber
       - type: tile
         entity: sensor.47_nouzove_zastaveni_2
         name: Centrální stop
@@ -327,20 +475,33 @@ sections:
         name: Externí start/stop
         icon: mdi:power
       - type: tile
-        entity: sensor.47_hladina_oleje_2
-        name: Hladina oleje
-        icon: mdi:oil-level
-      - type: tile
-        entity: sensor.47_napeti_baterie
-        name: Baterie
-        icon: mdi:car-battery
+        entity: sensor.47_pocet_havarijnich_stopu
+        name: Havarijní stopy
+        icon: mdi:car-brake-alert
+      - type: heading
+        heading: Servis a statistiky
+        icon: mdi:wrench
+        heading_style: subtitle
       - type: tile
         entity: sensor.47_motohodiny
         name: Motohodiny
         icon: mdi:timer-cog-outline
       - type: tile
+        entity: sensor.47_cas_do_servisu
+        name: Do servisu
+        icon: mdi:calendar-clock
+      - type: tile
         entity: sensor.47_pocet_startu
         name: Počet startů
         icon: mdi:counter
+      - type: tile
+        entity: sensor.47_celkova_vyroba_energie
+        name: Vyrobeno
+        icon: mdi:lightning-bolt-circle
+      - type: tile
+        entity: sensor.47_zbyvajici_cas_casovace
+        name: Zbývá (časovač)
+        icon: mdi:timer-sand
+        grid_options:
+          columns: 12
 cards: []
-show_icon_and_title: true

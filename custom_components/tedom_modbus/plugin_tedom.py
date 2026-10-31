@@ -43,6 +43,25 @@ SYNC_STATE_MAP = {
 # Režimy (registr 43204): synchronní dle List#7, asynchronní ověřeno na jednotce
 SYNC_MODE_MAP = {"VYP": 0, "MAN": 1, "SEM": 2, "AUT": 3}
 
+# Senzory, které má jen synchronní generátor (export 584-generator.TXT) – zatím jen čtení
+SYNC_EXTRA_SENSORS = [
+    # Fázování se sítí
+    TedomSensorEntityDescription(key="sync_slip", name="Skluz", address=105, native_unit_of_measurement=UnitOfFrequency.HERTZ, scale=0.01, suggested_display_precision=2, data_type=REGISTER_S16, state_class=SensorStateClass.MEASUREMENT, icon="mdi:sine-wave", interval_group=1),
+    TedomSensorEntityDescription(key="sync_angle", name="Úhel fází", address=106, native_unit_of_measurement="°", scale=0.1, suggested_display_precision=1, data_type=REGISTER_S16, state_class=SensorStateClass.MEASUREMENT, icon="mdi:angle-acute", interval_group=1),
+    TedomSensorEntityDescription(key="sync_vector_shift", name="Max. vektorový skok", address=107, native_unit_of_measurement="°", scale=0.1, suggested_display_precision=1, state_class=SensorStateClass.MEASUREMENT, icon="mdi:vector-line", interval_group=2),
+    # Regulátory (otáčky = činný výkon, AVR = napětí/jalový výkon)
+    TedomSensorEntityDescription(key="speed_gov_output", name="Výstup regulátoru otáček", address=115, native_unit_of_measurement=UnitOfElectricPotential.VOLT, scale=0.001, suggested_display_precision=2, data_type=REGISTER_S16, device_class=SensorDeviceClass.VOLTAGE, state_class=SensorStateClass.MEASUREMENT, icon="mdi:tune-variant", interval_group=1),
+    TedomSensorEntityDescription(key="avr_output", name="Výstup regulátoru napětí (AVR)", address=116, native_unit_of_measurement=PERCENTAGE, scale=0.1, suggested_display_precision=1, data_type=REGISTER_S16, state_class=SensorStateClass.MEASUREMENT, icon="mdi:tune-vertical", interval_group=1),
+    # Nastavení provozu se sítí (43023, 43024, 43029)
+    TedomSensorEntityDescription(key="power_control_mode", name="Řízení výkonu se sítí", address=3022, value_map={0: "Konstantní výkon", 1: "Import/export"}, icon="mdi:transmission-tower-export", interval_group=3),
+    TedomSensorEntityDescription(key="pf_setpoint", name="Žádaný účiník", address=3023, scale=0.01, suggested_display_precision=2, data_type=REGISTER_S16, device_class=SensorDeviceClass.POWER_FACTOR, icon="mdi:angle-acute", interval_group=3),
+    TedomSensorEntityDescription(key="island_enabled", name="Povolení ostrovního provozu", address=3028, value_map={0: "Ne", 1: "Ano"}, icon="mdi:island", interval_group=3),
+]
+
+# Detail výkonu, který je u asynchronních jednotek vypnutý, u synchronní má smysl hned
+SYNC_ENABLE_KEYS = {"q_gen_total", "s_gen_total", "p_gen_l1", "p_gen_l2", "p_gen_l3",
+                    "ugen_l1_l2", "ugen_l2_l3", "ugen_l3_l1"}
+
 
 class TedomPlugin:
     NAME = "Tedom Cogeneration"
@@ -51,11 +70,14 @@ class TedomPlugin:
         """Číselníky režimů a stavů podle typu generátoru (výchozí = asynchronní)."""
         self.gen_type = gen_type
         if gen_type == GEN_TYPE_SYNC:
-            self.SENSOR_TYPES = [
-                dataclasses.replace(d, value_map=SYNC_STATE_MAP)
-                if d.key in ("engine_state", "breaker_state") else d
-                for d in self.SENSOR_TYPES
-            ]
+            sensors = []
+            for d in self.SENSOR_TYPES:
+                if d.key in ("engine_state", "breaker_state"):
+                    d = dataclasses.replace(d, value_map=SYNC_STATE_MAP)
+                elif d.key in SYNC_ENABLE_KEYS:
+                    d = dataclasses.replace(d, entity_registry_enabled_default=True)
+                sensors.append(d)
+            self.SENSOR_TYPES = sensors + SYNC_EXTRA_SENSORS
             self.SELECT_TYPES = [
                 dataclasses.replace(d, options_map=SYNC_MODE_MAP) if d.key == "mode_selector" else d
                 for d in self.SELECT_TYPES

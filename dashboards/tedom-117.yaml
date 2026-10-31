@@ -1,9 +1,9 @@
 type: sections
-title: '117'
+title: Tedom 117
 path: view-117
-show_icon_and_title: true
 icon: mdi:engine
 max_columns: 4
+show_icon_and_title: true
 sections:
   - type: grid
     cards:
@@ -46,9 +46,9 @@ sections:
         name: Start
         icon: mdi:play-circle
         color: green
-        hide_state: true
         grid_options:
           columns: 4
+        hide_state: true
         tap_action:
           action: perform-action
           perform_action: button.press
@@ -61,9 +61,9 @@ sections:
         name: Stop
         icon: mdi:stop-circle
         color: red
-        hide_state: true
         grid_options:
           columns: 4
+        hide_state: true
         tap_action:
           action: perform-action
           perform_action: button.press
@@ -76,9 +76,9 @@ sections:
         name: Reset
         icon: mdi:restart-alert
         color: orange
-        hide_state: true
         grid_options:
           columns: 4
+        hide_state: true
         tap_action:
           action: perform-action
           perform_action: button.press
@@ -104,10 +104,10 @@ sections:
         entity: select.117_planovac_rezim
         name: Režim plánovače
         icon: mdi:calendar-sync
-        grid_options:
-          columns: 12
         features:
           - type: select-options
+        grid_options:
+          columns: 12
       - type: tile
         entity: sensor.117_plan_dnes
         name: Plán dnes
@@ -124,10 +124,10 @@ sections:
         entity: select.117_planovac_strategie
         name: Strategie
         icon: mdi:chart-line
-        grid_options:
-          columns: 12
         features:
           - type: select-options
+        grid_options:
+          columns: 12
         visibility: &id001
           - condition: state
             entity: select.117_planovac_rezim
@@ -178,10 +178,10 @@ sections:
         entity: switch.117_planovac_nejet_pri_zaporne_cene
         name: Nejet při záporné ceně
         icon: mdi:cash-remove
-        grid_options:
-          columns: 12
         features:
           - type: toggle
+        grid_options:
+          columns: 12
         visibility: *id001
       - type: tile
         entity: number.117_planovac_teplota_nadrze_plny_beh
@@ -246,7 +246,7 @@ sections:
         icon: mdi:lightning-bolt
       - type: gauge
         entity: sensor.117_aktualni_vykon
-        name: Aktuální výkon
+        name: Činný výkon
         min: 0
         max: 100
       - type: gauge
@@ -282,6 +282,8 @@ sections:
             name: Zátěž
           - entity: sensor.117_vykon_ze_site_2
             name: Síť
+          - entity: binary_sensor.117_plan_bezet_ted
+            name: Plán
   - type: grid
     cards:
       - type: heading
@@ -330,8 +332,8 @@ sections:
           columns: 4
       - type: heading
         heading: Síť
-        heading_style: subtitle
         icon: mdi:transmission-tower
+        heading_style: subtitle
         badges:
           - type: entity
             entity: sensor.117_frekvence_site_2
@@ -357,8 +359,8 @@ sections:
           columns: 4
       - type: heading
         heading: Stykače a jištění
-        heading_style: subtitle
         icon: mdi:electric-switch
+        heading_style: subtitle
       - type: tile
         entity: sensor.117_stykac_generatoru
         name: Stykač generátoru
@@ -465,7 +467,7 @@ sections:
         color: amber
       - type: tile
         entity: sensor.117_nouzove_zastaveni_2
-        name: Nouzové zastavení
+        name: Centrální stop
         icon: mdi:alert-octagon
         color: red
       - type: tile
@@ -478,8 +480,8 @@ sections:
         icon: mdi:car-brake-alert
       - type: heading
         heading: Servis a statistiky
-        heading_style: subtitle
         icon: mdi:wrench
+        heading_style: subtitle
       - type: tile
         entity: sensor.117_motohodiny
         name: Motohodiny
