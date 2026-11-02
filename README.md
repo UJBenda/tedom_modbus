@@ -75,6 +75,13 @@ Určuje číselník režimů a stavů:
 | Asynchronní | VYP / SEM / AUT | původní ověřená tabulka |
 | Synchronní (např. 584) | VYP / MAN / SEM / AUT | Table#1 z exportu GenConfigu |
 
+Synchronní jednotka má navíc (zatím jen čtení): skluz, úhel fází a vektorový skok
+(fázování se sítí), výstupy regulátoru otáček a napětí (AVR), řízení výkonu se sítí
+(konstantní výkon / import-export), žádaný účiník a povolení ostrovního provozu.
+Jalový a zdánlivý výkon, výkon po fázích a sdružená napětí jsou u ní zapnuté hned.
+
+Řídicí panely jednotek (jednotná šablona) jsou v `dashboards/tedom-*.yaml`.
+
 ## Poznámky k ComAp
 
 - Adresa v Modbus rámci = číslo registru − 40001 (např. otáčky 40021 → 20).
