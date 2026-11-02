@@ -90,6 +90,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     
     return True
 
+async def async_remove_config_entry_device(hass: HomeAssistant, entry: ConfigEntry, device_entry) -> bool:
+    """Povolí smazat staré zařízení (z dřívějších verzí integrace) – aktuální jednotku ne."""
+    hub = hass.data.get(DOMAIN, {}).get(entry.entry_id, {}).get("hub")
+    return hub is None or (DOMAIN, hub._name) not in device_entry.identifiers
+
 async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
